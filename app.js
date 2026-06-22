@@ -35,6 +35,26 @@
     { label: 'F=(R²/k)', pattern: /F=\(R²\/k\)\/\[\(1−R²\)\/\(n−k−1\)\]/g, tex: String.raw`F=\frac{R^2/k}{(1-R^2)/(n-k-1)}` },
     { label: 't=β/SE', pattern: /t=β\/SE/g, tex: String.raw`t=\frac{\beta}{SE}` },
     { label: 't=mean/SE', pattern: /t=mean\/SE/g, tex: String.raw`t=\frac{\bar{x}}{SE}` },
+    { label: 'ANN：R = r̄ₒ / r̄ₑ', pattern: /ANN：R = r̄ₒ \/ r̄ₑ/g, tex: String.raw`\mathrm{ANN}: R=\frac{\bar{r}_o}{\bar{r}_e}` },
+    { label: 'r = Σ[(xᵢ−x̄)(yᵢ−ȳ)]', pattern: /r = Σ\[\(xᵢ−x̄\)\(yᵢ−ȳ\)\] \/ √\[Σ\(xᵢ−x̄\)² Σ\(yᵢ−ȳ\)²\]/g, tex: String.raw`r=\frac{\sum_i(x_i-\bar{x})(y_i-\bar{y})}{\sqrt{\sum_i(x_i-\bar{x})^2\sum_i(y_i-\bar{y})^2}}` },
+    { label: 'r=0', pattern: /r=0/g, tex: String.raw`r=0` },
+    { label: 'I = [n / S₀]', pattern: /I = \[n \/ S₀\] · \[ΣᵢΣⱼ wᵢⱼ\(zᵢzⱼ\) \/ Σᵢ zᵢ²\]/g, tex: String.raw`I=\frac{n}{S_0}\frac{\sum_i\sum_jw_{ij}z_iz_j}{\sum_i z_i^2}` },
+    { label: 'zᵢ=xᵢ−x̄', pattern: /zᵢ=xᵢ−x̄/g, tex: String.raw`z_i=x_i-\bar{x}` },
+    { label: 'yᵢ = a + bxᵢ + eᵢ', pattern: /yᵢ = a \+ bxᵢ \+ eᵢ/g, tex: String.raw`y_i=a+bx_i+e_i` },
+    { label: 'ŷᵢ = a + bxᵢ', pattern: /ŷᵢ = a \+ bxᵢ/g, tex: String.raw`\hat{y}_i=a+bx_i` },
+    { label: 'eᵢ = yᵢ − ŷᵢ', pattern: /eᵢ = yᵢ − ŷᵢ/g, tex: String.raw`e_i=y_i-\hat{y}_i` },
+    { label: 'Σeᵢ²', pattern: /Σeᵢ²/g, tex: String.raw`\sum_i e_i^2` },
+    { label: 'SST = SSR + SSE', pattern: /SST = SSR \+ SSE/g, tex: String.raw`\mathrm{SST}=\mathrm{SSR}+\mathrm{SSE}` },
+    { label: 'R²=SSR/SST', pattern: /R²=SSR\/SST/g, tex: String.raw`R^2=\frac{\mathrm{SSR}}{\mathrm{SST}}` },
+    { label: 'H₀: β=0', pattern: /H₀: β=0/g, tex: String.raw`H_0:\beta=0` },
+    { label: 'ŷ = β₀ + β₁x₁ + β₂x₂ + … + βₚxₚ + e', pattern: /ŷ = β₀ \+ β₁x₁ \+ β₂x₂ \+ … \+ βₚxₚ \+ e/g, tex: String.raw`\hat{y}=\beta_0+\beta_1x_1+\beta_2x_2+\cdots+\beta_px_p+e` },
+    { label: 'yᵢ = β₀(uᵢ,vᵢ) + Σβₖ(uᵢ,vᵢ)xᵢₖ + εᵢ', pattern: /yᵢ = β₀\(uᵢ,vᵢ\) \+ Σβₖ\(uᵢ,vᵢ\)xᵢₖ \+ εᵢ/g, tex: String.raw`y_i=\beta_0(u_i,v_i)+\sum_k\beta_k(u_i,v_i)x_{ik}+\varepsilon_i` },
+    { label: 'SSE = Σₖ Σₓ∈Cₖ', pattern: /SSE = Σₖ Σₓ∈Cₖ \|\|x−μₖ\|\|²/g, tex: String.raw`\mathrm{SSE}=\sum_k\sum_{x\in C_k}\lVert x-\mu_k\rVert^2` },
+    { label: 'H(S)=−Σp(c)log₂p(c)', pattern: /H\(S\)=−Σp\(c\)log₂p\(c\)/g, tex: String.raw`H(S)=-\sum_c p(c)\log_2p(c)` },
+    { label: 'z = Σwᵢxᵢ+b；a=f(z)', pattern: /z = Σwᵢxᵢ\+b；a=f\(z\)/g, tex: String.raw`z=\sum_iw_ix_i+b,\quad a=f(z)` },
+    { label: 'a=f(Σwᵢxᵢ+b)', pattern: /a=f\(Σwᵢxᵢ\+b\)/g, tex: String.raw`a=f\!\left(\sum_iw_ix_i+b\right)` },
+    { label: 'z = Σwᵢxᵢ+b', pattern: /z = Σwᵢxᵢ\+b/g, tex: String.raw`z=\sum_iw_ix_i+b` },
+    { label: 'Σwᵢxᵢ+b', pattern: /Σwᵢxᵢ\+b/g, tex: String.raw`\sum_iw_ix_i+b` },
     { label: 'K(d)=πd²', pattern: /K\(d\)=πd²/g, tex: String.raw`K(d)=\pi d^2` },
     { label: 'K(d)', pattern: /K\(d\)/g, tex: String.raw`K(d)` },
     { label: 'L(d)', pattern: /L\(d\)/g, tex: String.raw`L(d)` },
@@ -110,6 +130,12 @@
       });
       return html.replace(keyPointPattern, '<strong class="key-point">$1</strong>');
     });
+  }
+
+  function restoreGuideInlineMarkup(html) {
+    return html
+      .replace(/&lt;strong&gt;/g, '<strong>')
+      .replace(/&lt;\/strong&gt;/g, '</strong>');
   }
 
   function splitCalcSteps(calculation) {
@@ -212,12 +238,12 @@
               </span>
             </summary>
             <div class="lesson-body">
-              <p class="lesson-core">${s.core}</p>
-              ${s.formula ? `<div class="lesson-formula">${esc(s.formula)}</div>` : ''}
-              ${s.details.map(p => `<p>${p}</p>`).join('')}
+              <p class="lesson-core">${restoreGuideInlineMarkup(renderRichText(s.core))}</p>
+              ${s.formula ? `<div class="lesson-formula text-block">${renderRichText(s.formula)}</div>` : ''}
+              ${s.details.map(p => `<p>${renderRichText(p)}</p>`).join('')}
               <div class="lesson-grid">
-                <div class="insight-box"><strong>案例化理解</strong><p>${esc(s.case)}</p></div>
-                <div class="insight-box trap"><strong>常见误区</strong><p>${esc(s.trap)}</p></div>
+                <div class="insight-box"><strong>案例化理解</strong><p>${renderRichText(s.case)}</p></div>
+                <div class="insight-box trap"><strong>常见误区</strong><p>${renderRichText(s.trap)}</p></div>
               </div>
               <div class="lesson-actions">
                 <button type="button" class="mark-section ${isDone ? 'is-done' : ''}" data-section-key="${key}" data-section-done="${isDone ? '1' : '0'}">${isDone ? '已读：点击取消' : '标记本节已读'}</button>
@@ -822,7 +848,7 @@
       $('#tabContent .formula-hero')?.insertAdjacentHTML('afterend', `${renderMethodPrimer(e.methodPrimer)}${renderConceptBridge(e.conceptBridge)}`);
     }
     if (state.tab === 'lab') mountLab(l.lab);
-    if (state.tab === 'formula' || state.tab === 'lab' || state.tab === 'quiz') renderMathBlocks($('#tabContent'));
+    if (state.tab === 'guide' || state.tab === 'formula' || state.tab === 'lab' || state.tab === 'quiz') renderMathBlocks($('#tabContent'));
     if (state.tab === 'formula') mountFormulaVisuals($('#tabContent'));
   }
 

@@ -105,10 +105,17 @@ assert.ok(appSource.includes('math-inline'), 'variables such as x-bar should ren
 assert.ok(appSource.includes('renderRichText'), 'text paragraphs should render inline formulas instead of raw math text');
 assert.ok(appSource.includes('formulaTokenRules'), 'rich text formulas should use a broad token registry, not a few hard-coded examples');
 assert.ok(appSource.includes('withMathPlaceholders'), 'rich text formula rendering should protect KaTeX spans from later text highlighting');
+assert.ok(appSource.includes('renderRichText(s.core)'), 'guide core paragraphs should render inline formulas with KaTeX');
+assert.ok(appSource.includes('renderRichText(s.formula)'), 'guide formula callouts should render slash fractions and symbols with KaTeX');
+assert.ok(appSource.includes('s.details.map(p => `<p>${renderRichText(p)}</p>`)'), 'guide detail paragraphs should render inline formulas with KaTeX');
+assert.ok(appSource.includes("state.tab === 'guide'") && appSource.includes("renderMathBlocks($('#tabContent'))"), 'guide tab should trigger KaTeX rendering after injecting rich math text');
 assert.ok(appSource.includes('formulaVarItems'), 'formula cards should render merged variable explanations');
 assert.ok(appSource.includes('variableGlossary'), 'formula cards should have fallback explanations for common symbols');
 for (const requiredInlineToken of ['Moran’s I', 'K(d)=πd²', 'F=(R²/k)', 'IoU=TP/(TP+FP+FN)', 'PSNR=10log10']) {
   assert.ok(appSource.includes(requiredInlineToken), `rich text should know how to render ${requiredInlineToken}`);
+}
+for (const requiredGuideToken of ['ANN：R = r̄ₒ / r̄ₑ', 'r = Σ[(xᵢ−x̄)(yᵢ−ȳ)]', 'r=0', 'I = [n / S₀]', 'yᵢ = a + bxᵢ + eᵢ', 'SSE = Σₖ Σₓ∈Cₖ', 'H(S)=−Σp(c)log₂p(c)', 'z = Σwᵢxᵢ+b；a=f(z)', 'a=f(Σwᵢxᵢ+b)']) {
+  assert.ok(appSource.includes(requiredGuideToken), `guide rich text should know how to render ${requiredGuideToken}`);
 }
 assert.ok(appSource.includes('calc-solution-steps'), 'calculation explanations should be split into readable steps');
 assert.ok(appSource.includes('data-kernel-control'), 'kernel function visual should be interactive and switchable');

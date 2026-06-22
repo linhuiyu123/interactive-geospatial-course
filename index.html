@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="空间分析课程 Lect.4—Lect.13 离线交互学习网页" />
+  <title>空间分析课程 · 交互学习网页</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="课程导航">
+      <div class="brand">
+        <div class="brand-mark">G</div>
+        <div>
+          <strong>空间分析课程</strong>
+          <span>Lect. 4 — Lect. 13</span>
+        </div>
+      </div>
+      <button id="showRoadmap" class="roadmap-btn">课程知识路线</button>
+      <label class="search-box">
+        <span>检索课程内容</span>
+        <input id="globalSearch" type="search" placeholder="如：Moran、GWR、K-means" autocomplete="off" />
+      </label>
+      <div id="searchResults" class="search-results" aria-live="polite"></div>
+      <nav id="lectureNav" class="lecture-nav" aria-label="讲次列表"></nav>
+      <div class="sidebar-footer">
+        <div class="progress-label"><span>学习进度</span><strong id="progressText">0 / 40</strong></div>
+        <div class="progress-track"><span id="progressBar"></span></div>
+        <p>网页完全离线运行。课件截图与原始 PDF 已随本网站一并整理。</p>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header id="hero" class="hero">
+        <div class="hero-copy">
+          <p id="lectureNumber" class="eyebrow"></p>
+          <h1 id="lectureTitle"></h1>
+          <p id="lectureEn" class="hero-en"></p>
+          <p id="lectureIntro" class="hero-intro"></p>
+          <div class="hero-actions">
+            <a id="openPdf" class="primary-btn" href="#" target="_blank" rel="noopener">打开本讲原始 PDF</a>
+            <button id="markLectureDone" class="secondary-btn">本讲全部标记为已读</button>
+          </div>
+        </div>
+        <figure class="hero-figure">
+          <img id="heroImage" alt="课件关键页截图" />
+          <figcaption>来自本讲课件的关键页截图</figcaption>
+        </figure>
+      </header>
+
+      <section id="lectureOverview" class="overview-panel"></section>
+
+      <div class="tabbar" role="tablist" aria-label="学习模块">
+        <button class="tab is-active" data-tab="guide" role="tab">详细讲解</button>
+        <button class="tab" data-tab="formula" role="tab">公式与计算</button>
+        <button class="tab" data-tab="chinese" role="tab">中文导读</button>
+        <button class="tab" data-tab="cases" role="tab">真实案例</button>
+        <button class="tab" data-tab="lab" role="tab">互动实验</button>
+        <button class="tab" data-tab="slides" role="tab">课件图示</button>
+        <button class="tab" data-tab="cheat" role="tab">知识快记</button>
+        <button class="tab" data-tab="quiz" role="tab">自测（含计算）</button>
+        <button class="tab" data-tab="notes" role="tab">我的笔记</button>
+      </div>
+
+      <section id="tabContent" class="tab-content" aria-live="polite"></section>
+
+      <footer class="site-footer">
+        <p>说明：本网页将课件内容重组为学习型讲解。互动实验用于建立直觉，并不替代 ArcGIS Pro、GeoDa 或科研软件的正式统计计算。</p>
+      </footer>
+    </main>
+  </div>
+
+  <dialog id="slideModal" class="slide-modal">
+    <button class="modal-close" id="modalClose" aria-label="关闭">×</button>
+    <img id="modalImage" alt="课件页放大图" />
+    <p id="modalCaption"></p>
+  </dialog>
+
+  <div id="roadmapModal" class="roadmap-modal" hidden>
+    <div class="roadmap-card" role="dialog" aria-modal="true" aria-labelledby="roadmapTitle">
+      <button id="roadmapClose" class="modal-close" aria-label="关闭">×</button>
+      <p class="eyebrow">从空间描述到智能地学</p>
+      <h2 id="roadmapTitle">十讲知识如何串起来</h2>
+      <p class="roadmap-intro">不要把十份 PDF 当成孤立章节。它们构成一条由“描述空间”到“解释、预测、智能化处理”的方法链。</p>
+      <div id="roadmapSteps" class="roadmap-steps"></div>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="enhancements.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

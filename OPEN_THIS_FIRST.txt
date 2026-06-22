@@ -1,0 +1,15 @@
+How to open the course website (v2)
+
+1. Double-click Start_Website.bat.
+2. Keep the black Command Prompt window open.
+3. The website should open automatically after about 2 seconds.
+4. If it does not open automatically, open this address in a browser:
+   http://127.0.0.1:8000/index.html
+
+What is new in v2:
+- Formula and calculation cards
+- Chinese study guide
+- External real-world cases
+- More quizzes, including numeric calculation questions
+
+This launcher contains ASCII-only text to avoid Windows command-prompt character encoding issues.

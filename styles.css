@@ -283,6 +283,310 @@ h1 { font-size: clamp(30px,4vw,52px); letter-spacing:-.04em; margin:0; line-heig
 }
 @media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation-duration:.01ms !important; transition-duration:.01ms !important; scroll-behavior:auto !important; } }
 
+/* ===== Lect.4 深度学习视图：中文排版、放大阅读、多模式实验 ===== */
+body,
+.tab-content,
+.lesson-body,
+.formula-card,
+.lab-card,
+.study-modal {
+  letter-spacing: 0;
+  text-align: left;
+  text-rendering: optimizeLegibility;
+}
+
+.zh-prose {
+  color: #314f60;
+  font-size: 15px;
+  line-height: 1.86;
+}
+
+.zh-prose p {
+  margin: 0 0 10px;
+}
+
+.study-open {
+  flex: 0 0 auto;
+  border: 1px solid color-mix(in srgb, var(--accent), white 68%);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent), white 94%);
+  border-radius: 8px;
+  padding: 5px 9px;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.study-open:hover,
+.study-open:focus-visible {
+  background: color-mix(in srgb, var(--accent), white 88%);
+  outline: none;
+}
+
+.formula-derivation h4,
+.formula-assumptions h4 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.method-primer {
+  border: 1px solid #d9e7ed;
+  background: #fbfdfe;
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 8px 22px rgba(41, 67, 83, .035);
+}
+
+.method-primer-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 14px;
+}
+
+.method-primer-head .eyebrow,
+.method-primer-head h3,
+.method-primer-head p {
+  grid-column: 1;
+}
+
+.method-primer-head h3 {
+  margin: 0;
+  color: #294d60;
+  font-size: 22px;
+  line-height: 1.35;
+}
+
+.method-primer-head p {
+  margin: 0;
+  color: #4f6a79;
+}
+
+.method-primer-head .study-open {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  align-self: center;
+}
+
+.method-primer-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.method-primer-grid article {
+  min-width: 0;
+  border: 1px solid #e0ebef;
+  border-radius: 11px;
+  background: white;
+  padding: 13px;
+}
+
+.method-primer-grid h4 {
+  margin: 0 0 7px;
+  color: var(--accent);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.method-primer-grid p {
+  margin: 0;
+  color: #536f7d;
+  font-size: 13px;
+  line-height: 1.72;
+}
+
+.study-modal {
+  width: min(820px, 92vw);
+  max-height: 88vh;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #183243;
+}
+
+.study-modal::backdrop {
+  background: rgba(7, 18, 29, .62);
+}
+
+.study-modal-card {
+  max-height: 88vh;
+  overflow: auto;
+  background: #ffffff;
+  border-radius: 15px;
+  padding: clamp(22px, 4vw, 34px);
+  box-shadow: 0 22px 80px rgba(5, 18, 29, .45);
+}
+
+.study-modal-card h2 {
+  margin: 0 38px 14px 0;
+  font-size: clamp(22px, 3vw, 32px);
+  line-height: 1.36;
+  color: #1d4358;
+}
+
+.study-modal .modal-close {
+  color: #244b60;
+  background: #edf5f8;
+  border: 1px solid #d4e5ec;
+}
+
+.study-modal-body {
+  font-size: clamp(17px, 2vw, 20px);
+  line-height: 1.95;
+  color: #2f5063;
+}
+
+.study-modal-body p {
+  margin: 0 0 16px;
+}
+
+.deep-lab-card {
+  display: grid;
+  gap: 15px;
+}
+
+.pattern-title-row {
+  margin-bottom: 0;
+}
+
+.mode-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.mode-tabs button {
+  border: 1px solid #d3e2e8;
+  border-radius: 9px;
+  background: #f8fbfc;
+  color: #435f70;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.mode-tabs button:hover,
+.mode-tabs button.is-active {
+  border-color: color-mix(in srgb, var(--accent), white 52%);
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent), white 92%);
+}
+
+.pattern-lab-grid {
+  grid-template-columns: minmax(0, 1fr) minmax(250px, 300px);
+  gap: 18px;
+}
+
+.pattern-canvas-wrap {
+  min-height: 360px;
+}
+
+.pattern-canvas-wrap canvas {
+  aspect-ratio: 82 / 50;
+}
+
+.ghost-control {
+  color: var(--accent);
+  background: #f7fbfc;
+  border: 1px solid color-mix(in srgb, var(--accent), white 64%);
+}
+
+.ghost-control:hover {
+  background: color-mix(in srgb, var(--accent), white 92%);
+}
+
+.pattern-metrics .metric {
+  align-items: center;
+}
+
+.pattern-metrics .metric span {
+  min-width: 0;
+  color: #546f7e;
+}
+
+.pattern-metrics .metric strong {
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.lab-mode-note {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 14px;
+  border: 1px solid #dfeaf0;
+  border-radius: 12px;
+  background: #fbfdfe;
+  padding: 15px;
+}
+
+.lab-mode-note h4 {
+  margin: 0;
+  color: #294d60;
+  font-size: 18px;
+  line-height: 1.35;
+}
+
+.lab-mode-note .study-open {
+  align-self: start;
+}
+
+.lab-mode-note > p {
+  grid-column: 1 / -1;
+  color: #4c6878;
+}
+
+.math-inline .katex {
+  font-size: 1.04em;
+}
+
+@media (max-width: 1100px) {
+  .method-primer-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 820px) {
+  .method-primer-head,
+  .lab-mode-note {
+    grid-template-columns: 1fr;
+  }
+
+  .method-primer-head .study-open {
+    grid-column: 1;
+    grid-row: auto;
+    justify-self: start;
+  }
+
+  .pattern-lab-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .method-primer,
+  .deep-lab-card {
+    padding: 16px;
+  }
+
+  .method-primer-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mode-tabs button {
+    flex: 1 1 42%;
+    min-height: 42px;
+  }
+
+  .study-modal-card {
+    border-radius: 12px;
+  }
+}
+
 /* ===== v2：公式、中文导读、真实案例与计算训练 ===== */
 .lesson-formula {
   display:block;

@@ -18,6 +18,8 @@
   const sectionKey = (lectureId, i) => `${lectureId}:${i}`;
   const esc = (s) => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const strip = (s) => String(s).replace(/<[^>]*>/g, '');
+  const studyText = (parts) => (Array.isArray(parts) ? parts : [parts]).filter(Boolean).join('\n\n');
+  const studyButton = (title, body) => `<button type="button" class="study-open" data-study-open data-study-title="${esc(title)}" data-study-body="${esc(body)}">放大阅读</button>`;
 
   function getProgress() {
     const all = LECTURES.flatMap(l => l.sections.map((_, i) => sectionKey(l.id, i)));
@@ -421,14 +423,14 @@
       ${f.source ? `<p class="formula-source">${esc(f.source)}</p>` : ''}
       <div class="formula-display math-display" data-tex="${esc(latex)}">${esc(latex)}</div>
       <p class="formula-read"><strong>怎么读：</strong>${esc(f.read || '')}</p>
-      <div class="formula-vars">${(f.vars || []).map(v => `<div><b>${esc(v[0])}</b><span>${esc(v[1])}</span></div>`).join('')}</div>
+      <div class="formula-vars">${(f.vars || []).map(v => `<div><b class="math-inline" data-tex="${esc(v[0])}">${esc(v[0])}</b><span>${esc(v[1])}</span></div>`).join('')}</div>
       <div class="formula-deep-grid">
         <section class="formula-derivation">
-          <h4>推导过程</h4>
+          <h4>推导过程 ${studyButton(`${f.name || ''}：推导过程`, studyText(f.derivation || []))}</h4>
           <ol>${(f.derivation || []).map(step => `<li>${esc(step)}</li>`).join('')}</ol>
         </section>
         <section class="formula-assumptions">
-          <h4>前提与易错点</h4>
+          <h4>前提与易错点 ${studyButton(`${f.name || ''}：前提与易错点`, studyText(f.assumptions || []))}</h4>
           <ul>${(f.assumptions || []).map(item => `<li>${esc(item)}</li>`).join('')}</ul>
         </section>
       </div>
@@ -451,11 +453,37 @@
     </section>`;
   }
 
+  function renderMethodPrimer(primer) {
+    if (!primer || !Array.isArray(primer.sections)) return '';
+    return `<section class="method-primer zh-prose">
+      <div class="method-primer-head">
+        <p class="eyebrow">先补基础</p>
+        <h3>${esc(primer.title)}</h3>
+        <p>${esc(primer.lead || '')}</p>
+        ${studyButton(primer.title, studyText([primer.lead, ...primer.sections.map((section) => `${section.title}\n${section.body}`)]))}
+      </div>
+      <div class="method-primer-grid">
+        ${primer.sections.map((section) => `<article>
+          <h4>${esc(section.title)}</h4>
+          <p>${esc(section.body)}</p>
+        </article>`).join('')}
+      </div>
+    </section>`;
+  }
+
   function renderMathBlocks(root = document) {
     if (!window.katex) return;
     root.querySelectorAll('.math-display[data-tex]').forEach(el => {
       window.katex.render(el.dataset.tex, el, {
         displayMode: true,
+        throwOnError: false,
+        strict: 'ignore',
+        trust: false,
+      });
+    });
+    root.querySelectorAll('.math-inline[data-tex]').forEach(el => {
+      window.katex.render(el.dataset.tex, el, {
+        displayMode: false,
         throwOnError: false,
         strict: 'ignore',
         trust: false,
@@ -548,7 +576,8 @@
     const renderers = { guide: renderGuide, formula: renderFormula, chinese: renderChinese, cases: renderCases, lab: renderLab, slides: renderSlides, cheat: renderCheat, quiz: renderQuiz, notes: renderNotes };
     $('#tabContent').innerHTML = (renderers[state.tab] || renderGuide)(l);
     if (state.tab === 'formula' && !$('#tabContent .concept-bridge')) {
-      $('#tabContent .formula-hero')?.insertAdjacentHTML('afterend', renderConceptBridge(enhance(l).conceptBridge));
+      const e = enhance(l);
+      $('#tabContent .formula-hero')?.insertAdjacentHTML('afterend', `${renderMethodPrimer(e.methodPrimer)}${renderConceptBridge(e.conceptBridge)}`);
     }
     if (state.tab === 'lab') mountLab(l.lab);
     if (state.tab === 'formula' || state.tab === 'lab') renderMathBlocks($('#tabContent'));
@@ -681,6 +710,444 @@
   function mountSuperresLab(){const lr=$('#lrCanvas'),sr=$('#srCanvas');function base(){const a=[];for(let r=0;r<11;r++){a[r]=[];for(let c=0;c<11;c++){const road=(c>4&&c<7)||(r>5&&r<8&&c<8);const water=r<4&&c>6;a[r][c]=water?2:road?1:0;}}return a;}function drawLR(){const c=lr.getContext('2d'),a=base(),s=20;c.clearRect(0,0,220,220);a.forEach((row,r)=>row.forEach((v,col)=>{c.fillStyle=v===2?'#75badd':v===1?'#596978':'#d9e7d2';c.fillRect(col*s,r*s,s-1,s-1);}));}function drawSR(){const method=$('#srMethod').value,c=sr.getContext('2d'),a=base(),size=220;c.clearRect(0,0,size,size);if(method==='nearest'){const s=20;a.forEach((row,r)=>row.forEach((v,col)=>{c.fillStyle=v===2?'#75badd':v===1?'#596978':'#d9e7d2';c.fillRect(col*s,r*s,s,s);}));$('#srTitle').textContent='最近邻插值：块状';$('#srSpatial').textContent='不增加真实细节';}else if(method==='bilinear'){const off=document.createElement('canvas');off.width=11;off.height=11;const oc=off.getContext('2d');a.forEach((row,r)=>row.forEach((v,col)=>{oc.fillStyle=v===2?'#75badd':v===1?'#596978':'#d9e7d2';oc.fillRect(col,r,1,1);}));c.imageSmoothingEnabled=true;c.drawImage(off,0,0,11,11,0,0,size,size);$('#srTitle').textContent='平滑插值：过渡更柔和';$('#srSpatial').textContent='边界可能更模糊';}else{const s=20;a.forEach((row,r)=>row.forEach((v,col)=>{c.fillStyle=v===2?'#75badd':v===1?'#465763':'#d3e4ca';c.fillRect(col*s,r*s,s,s);}));c.strokeStyle='#eef9ff';c.lineWidth=2; c.strokeRect(5*20,0,2*20,220);c.strokeRect(0,6*20,8*20,2*20);$('#srTitle').textContent='边缘保持式概念图';$('#srSpatial').textContent='更锐利，但须验证真实性';}$('#superResStatus').textContent=$('#srMethod').selectedOptions[0].textContent;}
     $('#srMethod').addEventListener('change',drawSR);$('#srRender').addEventListener('click',drawSR);drawLR();drawSR();}
 
+  function renderPatternLab() {
+    const modes = (enhance(current()).labModes || []);
+    const firstMode = modes[0] || {
+      id: 'quadrat',
+      title: '样方计数',
+      why: '把研究区切成同面积网格，用每格点数的均值与方差判断点模式是否偏离完全空间随机。',
+      read: 'VMR 大于 1 倾向聚集，小于 1 倾向规则；但结论会受样方大小影响。'
+    };
+    const modeButtons = modes.map((mode, index) => `
+      <button type="button" class="${index === 0 ? 'is-active' : ''}" data-pattern-mode="${esc(mode.id)}">
+        ${esc(mode.title)}
+      </button>`).join('');
+
+    return `${labIntro(
+      'Lect.4 空间模式综合实验室',
+      '同一批点可以从样方、点密度、核密度、最近邻、Ripley K 和蒙特卡洛六个角度观察。这里重点不是“看起来像什么”，而是练习：先设定随机参照，再用统计量判断偏离是否足够大。',
+      '建议先在“公式”页读完假设检验入门，再回到这里操作。点击小段说明右侧的“放大阅读”可以展开成大字号说明。'
+    )}
+      <div class="lab-card deep-lab-card pattern-lab">
+        <input id="patternLabMode" type="hidden" value="${esc(firstMode.id)}" />
+        <div class="lab-title-row pattern-title-row">
+          <h3>点模式工具箱</h3>
+          <span id="patternStatus" class="status-pill">等待计算</span>
+        </div>
+        <div class="mode-tabs" role="tablist" aria-label="Lect.4 空间模式实验模式">
+          ${modeButtons}
+        </div>
+        <div class="lab-grid pattern-lab-grid">
+          <div class="canvas-wrap pattern-canvas-wrap">
+            <canvas id="patternCanvas" width="820" height="500"></canvas>
+          </div>
+          <div class="lab-controls">
+            <div class="control-group">
+              <label for="patternPointMode">点过程</label>
+              <select id="patternPointMode">
+                <option value="random">完全空间随机 CSR</option>
+                <option value="cluster">聚集：热点中心吸引点</option>
+                <option value="regular">规则：点之间保持间隔</option>
+              </select>
+            </div>
+            <div class="control-group">
+              <label for="patternBandwidth">搜索半径 / 带宽：<span id="patternBandwidthValue">0.18</span></label>
+              <input id="patternBandwidth" type="range" min="0.08" max="0.36" step="0.01" value="0.18" />
+            </div>
+            <div class="control-group">
+              <label for="patternGrid">样方网格：<span id="patternGridValue">6 × 6</span></label>
+              <input id="patternGrid" type="range" min="3" max="12" value="6" />
+            </div>
+            <button class="control-button" id="patternRegenerate" type="button">重新生成点</button>
+            <button class="control-button ghost-control" id="patternSimulate" type="button">运行蒙特卡洛</button>
+            <div class="metric-list pattern-metrics">
+              <div class="metric"><span id="patternMetricALabel">统计量 A</span><strong id="patternMetricA">-</strong></div>
+              <div class="metric"><span id="patternMetricBLabel">统计量 B</span><strong id="patternMetricB">-</strong></div>
+              <div class="metric"><span id="patternMetricCLabel">统计量 C</span><strong id="patternMetricC">-</strong></div>
+              <div class="metric"><span id="patternMetricDLabel">判断</span><strong id="patternMetricD">-</strong></div>
+            </div>
+          </div>
+        </div>
+        <article class="lab-mode-note zh-prose">
+          <div>
+            <p class="eyebrow">当前工具</p>
+            <h4 id="patternModeTitle">${esc(firstMode.title)}</h4>
+          </div>
+          <button type="button" class="study-open" id="patternModeStudy" data-study-open data-study-title="${esc(firstMode.title)}" data-study-body="${esc(studyText([firstMode.why, firstMode.read]))}">放大阅读</button>
+          <p id="patternModeWhy">${esc(firstMode.why)}</p>
+          <p id="patternModeRead">${esc(firstMode.read)}</p>
+        </article>
+      </div>`;
+  }
+
+  function mountPatternLab() {
+    const canvas = $('#patternCanvas'); if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const pointMode = $('#patternPointMode');
+    const gridInput = $('#patternGrid');
+    const bandwidthInput = $('#patternBandwidth');
+    const hiddenMode = $('#patternLabMode');
+    const modeButtons = [...document.querySelectorAll('[data-pattern-mode]')];
+    const modes = (enhance({ id: 'L04' }).labModes || []);
+    let activeMode = hiddenMode?.value || 'quadrat';
+    let points = [];
+    let simulations = [];
+
+    const clamp = (value, min = 0.025, max = 0.975) => Math.max(min, Math.min(max, value));
+    const rand = (min, max) => min + Math.random() * (max - min);
+    const pt = (x, y) => ({ x: clamp(x), y: clamp(y) });
+    const fmt = (value, digits = 2) => Number.isFinite(value) ? value.toFixed(digits) : '-';
+
+    function setMetric(labels, values, status) {
+      ['A', 'B', 'C', 'D'].forEach((key, index) => {
+        $(`#patternMetric${key}Label`).textContent = labels[index] || '';
+        $(`#patternMetric${key}`).textContent = values[index] || '-';
+      });
+      $('#patternStatus').textContent = status;
+    }
+
+    function generatePointSet(kind = pointMode.value, n = 90) {
+      const result = [];
+      if (kind === 'cluster') {
+        const centers = [{ x: .27, y: .30 }, { x: .72, y: .35 }, { x: .55, y: .72 }];
+        for (let i = 0; i < n; i++) {
+          const c = centers[i % centers.length];
+          const spread = (Math.random() + Math.random() + Math.random() - 1.5) * .13;
+          const angle = Math.random() * Math.PI * 2;
+          result.push(pt(c.x + Math.cos(angle) * Math.abs(spread), c.y + Math.sin(angle) * Math.abs(spread)));
+        }
+      } else if (kind === 'regular') {
+        const cols = 10, rows = 9;
+        for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+          result.push(pt(.07 + c * .095 + rand(-.015, .015), .09 + r * .095 + rand(-.015, .015)));
+        }
+      } else {
+        for (let i = 0; i < n; i++) result.push(pt(rand(.04, .96), rand(.05, .95)));
+      }
+      return result;
+    }
+
+    function regenerate() {
+      points = generatePointSet();
+      simulations = [];
+      draw();
+    }
+
+    function plot(p, w, h, pad = 28) {
+      return [pad + p.x * (w - pad * 2), pad + p.y * (h - pad * 2)];
+    }
+
+    function drawFrame() {
+      const w = canvas.width, h = canvas.height;
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = '#fbfdfe';
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = '#d8e5eb';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(24, 24, w - 48, h - 48);
+      return { w, h, pad: 28 };
+    }
+
+    function drawPoints(radius = 4.2, color = '#17384a') {
+      const { w, h } = canvas;
+      ctx.fillStyle = color;
+      points.forEach((point) => {
+        const [x, y] = plot(point, w, h);
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
+
+    function quadratCounts(list = points, g = +gridInput.value) {
+      const counts = Array(g * g).fill(0);
+      list.forEach((point) => {
+        const col = Math.min(g - 1, Math.floor(point.x * g));
+        const row = Math.min(g - 1, Math.floor(point.y * g));
+        counts[row * g + col]++;
+      });
+      const mean = list.length / counts.length;
+      const variance = counts.reduce((sum, value) => sum + (value - mean) ** 2, 0) / Math.max(1, counts.length - 1);
+      return { counts, mean, variance, vmr: variance / mean };
+    }
+
+    function drawQuadrat() {
+      const { w, h, pad } = drawFrame();
+      const g = +gridInput.value;
+      const { counts, mean, variance, vmr } = quadratCounts(points, g);
+      const cellW = (w - pad * 2) / g;
+      const cellH = (h - pad * 2) / g;
+      const maxCount = Math.max(...counts, 1);
+      for (let i = 0; i <= g; i++) {
+        ctx.strokeStyle = '#c7dce4';
+        ctx.beginPath();
+        ctx.moveTo(pad + i * cellW, pad);
+        ctx.lineTo(pad + i * cellW, h - pad);
+        ctx.moveTo(pad, pad + i * cellH);
+        ctx.lineTo(w - pad, pad + i * cellH);
+        ctx.stroke();
+      }
+      counts.forEach((count, index) => {
+        const col = index % g, row = Math.floor(index / g);
+        if (count) {
+          const alpha = .08 + .32 * (count / maxCount);
+          ctx.fillStyle = `rgba(30,111,149,${alpha})`;
+          ctx.fillRect(pad + col * cellW, pad + row * cellH, cellW, cellH);
+          ctx.fillStyle = '#496779';
+          ctx.font = '12px system-ui';
+          ctx.fillText(String(count), pad + col * cellW + 5, pad + row * cellH + 15);
+        }
+      });
+      drawPoints();
+      const chi = (g * g - 1) * vmr;
+      const label = vmr > 1.25 ? '方差偏大：倾向聚集' : vmr < .80 ? '方差偏小：倾向规则' : '接近随机';
+      setMetric(
+        ['每格均值', '样本方差', 'VMR = s² / x̄', 'χ² 近似'],
+        [fmt(mean), fmt(variance), fmt(vmr), fmt(chi)],
+        label
+      );
+    }
+
+    function densityValue(x, y, kernel) {
+      const h = +bandwidthInput.value;
+      let value = 0;
+      points.forEach((point) => {
+        const d = Math.hypot(point.x - x, point.y - y);
+        if (d <= h) {
+          if (kernel === 'point') value += 1;
+          else value += (1 - (d * d) / (h * h)) ** 2;
+        }
+      });
+      return value / (Math.PI * h * h);
+    }
+
+    function fillDensity(kind) {
+      const { w, h, pad } = drawFrame();
+      const cols = 58, rows = 35;
+      const values = [];
+      let maxValue = 0;
+      for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+        const x = (c + .5) / cols;
+        const y = (r + .5) / rows;
+        const value = densityValue(x, y, kind);
+        values.push(value);
+        maxValue = Math.max(maxValue, value);
+      }
+      const cellW = (w - pad * 2) / cols;
+      const cellH = (h - pad * 2) / rows;
+      values.forEach((value, index) => {
+        const col = index % cols, row = Math.floor(index / cols);
+        const t = maxValue ? value / maxValue : 0;
+        const red = Math.round(252 * t + 232 * (1 - t));
+        const green = Math.round(111 * t + 244 * (1 - t));
+        const blue = Math.round(78 * t + 247 * (1 - t));
+        ctx.fillStyle = `rgb(${red},${green},${blue})`;
+        ctx.fillRect(pad + col * cellW, pad + row * cellH, cellW + .4, cellH + .4);
+      });
+      drawPoints(3.6, 'rgba(17,45,60,.86)');
+      return maxValue;
+    }
+
+    function drawPointDensity() {
+      const maxValue = fillDensity('point');
+      const h = +bandwidthInput.value;
+      setMetric(
+        ['搜索半径 h', '最高点密度', '计算逻辑', '读图重点'],
+        [fmt(h), fmt(maxValue, 1), '圆内计数 / 面积', '高值是否连片'],
+        '点密度：硬边界计数'
+      );
+    }
+
+    function drawKernelDensity() {
+      const maxValue = fillDensity('kernel');
+      const h = +bandwidthInput.value;
+      setMetric(
+        ['带宽 h', '最高核密度', '核函数', '读图重点'],
+        [fmt(h), fmt(maxValue, 1), 'biweight 衰减', '平滑热点范围'],
+        '核密度：距离衰减加权'
+      );
+    }
+
+    function nearestStats() {
+      const nearest = points.map((point, i) => {
+        let best = Infinity, bestIndex = -1;
+        points.forEach((other, j) => {
+          if (i === j) return;
+          const d = Math.hypot(point.x - other.x, point.y - other.y);
+          if (d < best) { best = d; bestIndex = j; }
+        });
+        return { distance: best, index: bestIndex };
+      });
+      const observed = nearest.reduce((sum, item) => sum + item.distance, 0) / nearest.length;
+      const expected = 1 / (2 * Math.sqrt(points.length));
+      const se = 0.26136 / points.length;
+      const z = (observed - expected) / se;
+      return { nearest, observed, expected, se, z, ratio: observed / expected };
+    }
+
+    function drawANN() {
+      const { w, h } = drawFrame();
+      const stats = nearestStats();
+      ctx.strokeStyle = 'rgba(210,105,69,.32)';
+      ctx.lineWidth = 1.4;
+      stats.nearest.forEach((item, index) => {
+        const a = plot(points[index], w, h);
+        const b = plot(points[item.index], w, h);
+        ctx.beginPath();
+        ctx.moveTo(a[0], a[1]);
+        ctx.lineTo(b[0], b[1]);
+        ctx.stroke();
+      });
+      drawPoints(4, '#17384a');
+      const direction = stats.z < -1.96 ? '显著聚集' : stats.z > 1.96 ? '显著规则' : '未显著偏离 CSR';
+      setMetric(
+        ['观测平均距离', 'CSR 期望距离', 'z 值', 'R = 观测 / 期望'],
+        [fmt(stats.observed, 3), fmt(stats.expected, 3), fmt(stats.z, 2), fmt(stats.ratio, 2)],
+        `最近邻：${direction}`
+      );
+    }
+
+    function ripleyValues(list = points) {
+      const n = list.length;
+      return Array.from({ length: 22 }, (_, i) => {
+        const d = .035 + i * .014;
+        let orderedPairs = 0;
+        for (let a = 0; a < n; a++) for (let b = 0; b < n; b++) {
+          if (a !== b && Math.hypot(list[a].x - list[b].x, list[a].y - list[b].y) <= d) orderedPairs++;
+        }
+        const k = orderedPairs / (n * (n - 1));
+        return { d, l: Math.sqrt(k / Math.PI) - d };
+      });
+    }
+
+    function drawRipley() {
+      const { w, h } = drawFrame();
+      const values = ripleyValues();
+      const left = 72, right = w - 42, top = 48, bottom = h - 60;
+      const minY = Math.min(-.08, ...values.map(v => v.l));
+      const maxY = Math.max(.08, ...values.map(v => v.l));
+      const xScale = (d) => left + (d - values[0].d) / (values.at(-1).d - values[0].d) * (right - left);
+      const yScale = (value) => bottom - (value - minY) / (maxY - minY) * (bottom - top);
+      ctx.strokeStyle = '#c9d9df';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(left, yScale(0));
+      ctx.lineTo(right, yScale(0));
+      ctx.moveTo(left, top);
+      ctx.lineTo(left, bottom);
+      ctx.lineTo(right, bottom);
+      ctx.stroke();
+      ctx.strokeStyle = '#1e6f95';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      values.forEach((item, index) => {
+        const x = xScale(item.d), y = yScale(item.l);
+        if (index === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+      ctx.fillStyle = '#315768';
+      ctx.font = '13px system-ui';
+      ctx.fillText('L(d) > 0：该距离尺度邻居偏多', left, 28);
+      ctx.fillText('距离 d', right - 42, bottom + 34);
+      ctx.fillText('0', left - 20, yScale(0) + 4);
+      const peak = values.reduce((best, item) => item.l > best.l ? item : best, values[0]);
+      const trough = values.reduce((best, item) => item.l < best.l ? item : best, values[0]);
+      setMetric(
+        ['最大 L(d)', '出现距离 d', '最小 L(d)', '读图重点'],
+        [fmt(peak.l, 3), fmt(peak.d, 3), fmt(trough.l, 3), '看尺度而非单值'],
+        peak.l > .02 ? 'Ripley K：多尺度聚集' : 'Ripley K：接近 CSR'
+      );
+    }
+
+    function runMonteCarlo(iterations = 199, redraw = true) {
+      const g = +gridInput.value;
+      simulations = Array.from({ length: iterations }, () => quadratCounts(generatePointSet('random', points.length), g).vmr);
+      if (redraw) draw();
+    }
+
+    function drawMonteCarlo() {
+      if (!simulations.length) runMonteCarlo(199, false);
+      const { w, h } = drawFrame();
+      const observed = quadratCounts(points, +gridInput.value).vmr;
+      const maxValue = Math.max(observed, ...simulations, 2.5);
+      const bins = 18;
+      const counts = Array(bins).fill(0);
+      simulations.forEach((value) => {
+        const index = Math.min(bins - 1, Math.floor(value / maxValue * bins));
+        counts[index]++;
+      });
+      const left = 58, right = w - 36, bottom = h - 58, top = 46;
+      const barW = (right - left) / bins;
+      const maxCount = Math.max(...counts, 1);
+      counts.forEach((count, index) => {
+        const barH = (bottom - top) * count / maxCount;
+        ctx.fillStyle = '#9bc7d8';
+        ctx.fillRect(left + index * barW + 2, bottom - barH, Math.max(3, barW - 4), barH);
+      });
+      const obsX = left + observed / maxValue * (right - left);
+      ctx.strokeStyle = '#d05d48';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(obsX, top - 5);
+      ctx.lineTo(obsX, bottom);
+      ctx.stroke();
+      ctx.fillStyle = '#315768';
+      ctx.font = '13px system-ui';
+      ctx.fillText('随机 CSR 模拟得到的 VMR 分布', left, 28);
+      ctx.fillStyle = '#d05d48';
+      ctx.fillText('观测 VMR', Math.min(obsX + 8, right - 78), top + 13);
+      const tail = simulations.filter((value) => value >= observed).length;
+      const p = (tail + 1) / (simulations.length + 1);
+      setMetric(
+        ['观测 VMR', '模拟次数', '右尾 p 值', '判断'],
+        [fmt(observed), String(simulations.length), fmt(p, 3), p < .05 ? '拒绝 CSR' : '不能拒绝 CSR'],
+        '蒙特卡洛：用随机参照判断'
+      );
+    }
+
+    function updateModeNote() {
+      const mode = modes.find((item) => item.id === activeMode);
+      if (!mode) return;
+      $('#patternModeTitle').textContent = mode.title;
+      $('#patternModeWhy').textContent = mode.why;
+      $('#patternModeRead').textContent = mode.read;
+      const study = $('#patternModeStudy');
+      study.dataset.studyTitle = mode.title;
+      study.dataset.studyBody = studyText([mode.why, mode.read]);
+    }
+
+    function setMode(modeId) {
+      activeMode = modeId;
+      if (hiddenMode) hiddenMode.value = modeId;
+      modeButtons.forEach((button) => button.classList.toggle('is-active', button.dataset.patternMode === modeId));
+      updateModeNote();
+      draw();
+    }
+
+    function draw() {
+      $('#patternBandwidthValue').textContent = (+bandwidthInput.value).toFixed(2);
+      $('#patternGridValue').textContent = `${gridInput.value} × ${gridInput.value}`;
+      if (activeMode !== 'monte-carlo') simulations = [];
+      if (activeMode === 'quadrat') drawQuadrat();
+      else if (activeMode === 'point-density') drawPointDensity();
+      else if (activeMode === 'kernel-density') drawKernelDensity();
+      else if (activeMode === 'ann') drawANN();
+      else if (activeMode === 'ripley-k') drawRipley();
+      else drawMonteCarlo();
+    }
+
+    modeButtons.forEach((button) => button.addEventListener('click', () => setMode(button.dataset.patternMode)));
+    pointMode.addEventListener('change', regenerate);
+    gridInput.addEventListener('input', draw);
+    bandwidthInput.addEventListener('input', draw);
+    $('#patternRegenerate').addEventListener('click', regenerate);
+    $('#patternSimulate').addEventListener('click', () => {
+      if (activeMode !== 'monte-carlo') setMode('monte-carlo');
+      runMonteCarlo(199);
+    });
+    regenerate();
+  }
+
   function mountLab(name) {
     ({ pattern: mountPatternLab, moran: mountMoranLab, regression: mountRegressionLab, project: mountProjectLab, cluster: mountClusterLab, forest: mountForestLab, spacetime: mountSpacetimeLab, cnn: mountCnnLab, bigdata: mountBigDataLab, superres: mountSuperresLab }[name] || (()=>{}))();
   }
@@ -697,11 +1164,14 @@
       const slide=e.target.closest('[data-slide-src]'); if(slide){openSlide(slide.dataset.slideSrc,slide.dataset.slideCaption);return;}
       const opt=e.target.closest('[data-quiz-option]'); if(opt){handleQuiz(+opt.dataset.quizOption,+opt.dataset.option);return;}
       const calc=e.target.closest('[data-check-calc]'); if(calc){handleCalc(+calc.dataset.checkCalc);return;}
+      const study=e.target.closest('[data-study-open]'); if(study){openStudyModal(study.dataset.studyTitle, study.dataset.studyBody);return;}
       if(e.target.id==='saveNote'){const l=current();const map=notes();map[l.id]=$('#noteEditor').value;safeSet(notesKey,map);$('#noteStatus').textContent='已保存到此浏览器。';return;}
     });
     $('#markLectureDone').addEventListener('click',()=>{const l=current(),map=done();l.sections.forEach((_,i)=>map[sectionKey(l.id,i)]=true);safeSet(doneKey,map);renderAll();});
     $('#modalClose').addEventListener('click',()=>$('#slideModal').close());
     $('#slideModal').addEventListener('click',e=>{if(e.target.id==='slideModal')$('#slideModal').close();});
+    $('#studyModalClose').addEventListener('click',()=>$('#studyModal').close());
+    $('#studyModal').addEventListener('click',e=>{if(e.target.id==='studyModal')$('#studyModal').close();});
     $('#showRoadmap').addEventListener('click',()=>{$('#roadmapModal').hidden=false;document.body.style.overflow='hidden';});
     $('#roadmapClose').addEventListener('click',()=>{$('#roadmapModal').hidden=true;document.body.style.overflow='';});
     $('#roadmapModal').addEventListener('click',e=>{if(e.target.id==='roadmapModal'){$('#roadmapModal').hidden=true;document.body.style.overflow='';}});
@@ -709,6 +1179,17 @@
   }
 
   function openSlide(src,caption){const modal=$('#slideModal');$('#modalImage').src=src;$('#modalCaption').textContent=caption;modal.showModal();}
+
+  function openStudyModal(title, body) {
+    const modal = $('#studyModal');
+    $('#studyModalTitle').textContent = title || '放大阅读';
+    $('#studyModalBody').innerHTML = String(body || '')
+      .split(/\n{2,}/)
+      .filter(Boolean)
+      .map(part => `<p>${esc(part).replace(/\n/g, '<br>')}</p>`)
+      .join('');
+    modal.showModal();
+  }
 
   function search(e){const q=e.target.value.trim().toLowerCase();const box=$('#searchResults');if(!q){box.innerHTML='';return;}const res=[];LECTURES.forEach(l=>{const hay=(l.title+' '+l.en+' '+l.intro+' '+l.route.join(' ')+' '+l.sections.map(s=>s.title+' '+strip(s.core)+' '+s.details.join(' ')).join(' ')).toLowerCase();if(hay.includes(q)){const match=l.sections.find(s=>(s.title+' '+strip(s.core)+' '+s.details.join(' ')).toLowerCase().includes(q));res.push({id:l.id,title:`${l.number} · ${l.title}`,text:match?match.title:l.intro});}});box.innerHTML=res.slice(0,8).map(r=>`<button class="search-result" type="button" data-nav-id="${r.id}"><strong>${esc(r.title)}</strong>${esc(r.text)}</button>`).join('')||'<div style="padding:7px;color:#a6c1ce;font-size:12px">没有匹配到。可试试英文术语或更短关键词。</div>';}
 

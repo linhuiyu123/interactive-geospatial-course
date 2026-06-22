@@ -74,6 +74,29 @@ const allVisuals = lectureIds.flatMap((lectureId) => (enhancements[lectureId].fo
 assert.ok(allVisuals.includes('kernel-family'), 'formula page should include a kernel-function visual');
 assert.ok(allVisuals.includes('distance-decay'), 'formula page should include a distance-decay visual');
 
+const l04 = enhancements.L04;
+assert.ok(l04.methodPrimer, 'Lect.4 should include a beginner-friendly method primer');
+assert.ok(Array.isArray(l04.methodPrimer.sections) && l04.methodPrimer.sections.length >= 4, 'Lect.4 primer should explain hypothesis testing before formulas');
+const primerText = l04.methodPrimer.sections.map((section) => `${section.title} ${section.body}`).join('\n');
+for (const keyword of ['零假设', '备择假设', 'z 检验', 'p 值', '标准误']) {
+  assert.ok(primerText.includes(keyword), `Lect.4 primer should explain ${keyword}`);
+}
+
+const l04LabModes = l04.labModes || [];
+const l04LabModeIds = l04LabModes.map((mode) => mode.id);
+for (const requiredMode of ['quadrat', 'point-density', 'kernel-density', 'ann', 'ripley-k', 'monte-carlo']) {
+  assert.ok(l04LabModeIds.includes(requiredMode), `Lect.4 lab should include ${requiredMode}`);
+}
+for (const mode of l04LabModes) {
+  assert.ok(mode.title && mode.why && mode.read, `Lect.4 lab mode ${mode.id} should explain what and why`);
+}
+
+assert.ok(appSource.includes('openStudyModal'), 'small explanatory text should open a readable modal');
+assert.ok(appSource.includes('data-study-open'), 'readable blocks should expose click targets');
+assert.ok(appSource.includes('renderMethodPrimer'), 'Lect.4 should render a method primer before formulas');
+assert.ok(appSource.includes('patternLabMode'), 'Lect.4 lab should support multiple demo modes');
+assert.ok(appSource.includes('math-inline'), 'variables such as x-bar should render as inline math instead of raw LaTeX');
+
 const labNotes = sandbox.window.LAB_DEMO_NOTES;
 assert.ok(labNotes, 'labs should have supplemental explanation data');
 const labNames = [...new Set(lectures.map((lecture) => lecture.lab))];

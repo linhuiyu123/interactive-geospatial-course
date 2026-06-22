@@ -82,6 +82,12 @@
     { label: 'W_i', pattern: /W_i/g, tex: String.raw`W_i` },
     { label: 'x_{g,t}', pattern: /x_\{g,t\}/g, tex: String.raw`x_{g,t}` },
     { label: 'a^{(l-1)}', pattern: /a\^\{\(l-1\)\}/g, tex: String.raw`a^{(l-1)}` },
+    { label: '1/(2\\sqrt{\\lambda})', pattern: /1\/\(2\\sqrt\{\\lambda\}\)/g, tex: String.raw`\frac{1}{2\sqrt{\lambda}}` },
+    { label: '\\lambda=n/A', pattern: /\\lambda=n\/A/g, tex: String.raw`\lambda=\frac{n}{A}` },
+    { label: '\\sum_j w_ij z_j', pattern: /\\sum_j w_ij z_j/g, tex: String.raw`\sum_j w_{ij} z_j` },
+    { label: '\\sum w_ij x_j', pattern: /\\sum w_ij x_j/g, tex: String.raw`\sum_j w_{ij} x_j` },
+    { label: '\\sum w_k MS_k', pattern: /\\sum w_k MS_k/g, tex: String.raw`\sum_k w_k \mathrm{MS}_k` },
+    { label: '\\pi d²', pattern: /\\pi d²/g, tex: String.raw`\pi d^2` },
     { label: '\\sqrt{\\lambda}', pattern: /\\sqrt\{\\lambda\}/g, tex: String.raw`\sqrt{\lambda}` },
     { label: '\\lambda', pattern: /\\lambda/g, tex: String.raw`\lambda` },
     { label: '\\pi', pattern: /\\pi/g, tex: String.raw`\pi` },
@@ -1495,6 +1501,14 @@
   }
 
   function search(e){const q=e.target.value.trim().toLowerCase();const box=$('#searchResults');if(!q){box.innerHTML='';return;}const res=[];LECTURES.forEach(l=>{const hay=(l.title+' '+l.en+' '+l.intro+' '+l.route.join(' ')+' '+l.sections.map(s=>s.title+' '+strip(s.core)+' '+s.details.join(' ')).join(' ')).toLowerCase();if(hay.includes(q)){const match=l.sections.find(s=>(s.title+' '+strip(s.core)+' '+s.details.join(' ')).toLowerCase().includes(q));res.push({id:l.id,title:`${l.number} · ${l.title}`,text:match?match.title:l.intro});}});box.innerHTML=res.slice(0,8).map(r=>`<button class="search-result" type="button" data-nav-id="${r.id}"><strong>${esc(r.title)}</strong>${esc(r.text)}</button>`).join('')||'<div style="padding:7px;color:#a6c1ce;font-size:12px">没有匹配到。可试试英文术语或更短关键词。</div>';}
+
+  if (window.__COURSE_TEST_MODE__) {
+    window.__COURSE_TEST_HOOKS__ = {
+      renderRichText,
+      normalizeLatexFragment,
+    };
+    return;
+  }
 
   function renderRoadmap(){const items=[
     ['Lect.4','空间模式','先回答“对象在哪里、聚集还是离散”。'],['Lect.5','空间相关','再回答“邻居是否相似、热点在哪里”。'],['Lect.6','回归解释','用模型解释 y 与多种因素的条件关系。'],['Lect.7','项目整合','用 PPDAC 组织问题、数据、方法和表达。'],['Lect.8','聚类分区','发现相似群体与连片区域。'],['Lect.9','机器学习','从训练样本学习分类规则并验证泛化。'],['Lect.10','时空过程','同时追踪位置与时间，理解变化和热点演进。'],['Lect.11','深度遥感','用 CNN 等网络处理检测与像素级任务。'],['Lect.12','大数据','处理海量、多源、快速变化的地理信息。'],['Lect.13','超分辨率','增强空间表达，同时约束并验证真实性。']

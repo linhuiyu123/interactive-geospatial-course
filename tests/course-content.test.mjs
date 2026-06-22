@@ -111,6 +111,38 @@ assert.ok(appSource.includes('renderRichText(s.core)'), 'guide core paragraphs s
 assert.ok(appSource.includes('renderRichText(s.formula)'), 'guide formula callouts should render slash fractions and symbols with KaTeX');
 assert.ok(appSource.includes('s.details.map(p => `<p>${renderRichText(p)}</p>`)'), 'guide detail paragraphs should render inline formulas with KaTeX');
 assert.ok(appSource.includes("state.tab === 'guide'") && appSource.includes("renderMathBlocks($('#tabContent'))"), 'guide tab should trigger KaTeX rendering after injecting rich math text');
+
+const renderSandbox = { window: { __COURSE_TEST_MODE__: true } };
+vm.createContext(renderSandbox);
+vm.runInContext(appSource, renderSandbox, { filename: 'app.js' });
+const { renderRichText } = renderSandbox.window.__COURSE_TEST_HOOKS__;
+const genericLatex = renderRichText(String.raw`再计算邻域加权偏差 \sum_j w_ij z_j。`);
+assert.match(genericLatex, /class="math-inline text-math"/, 'generic LaTeX fragments should become inline math spans');
+assert.match(genericLatex, /data-tex="\\sum_j w_\{ij\} z_j"/, 'generic LaTeX fragments should normalize multi-letter subscripts');
+const fractionLatex = renderRichText(String.raw`所以先用 s^2/\bar{x} 衡量方差是否过大。`);
+assert.match(fractionLatex, /data-tex="\\frac\{s\^2\}\{\\bar\{x\}\}"/, 'slash fractions in prose should render as stacked KaTeX fractions');
+const lambdaLatex = renderRichText(String.raw`由点密度 \lambda=n/A 得到期望距离。`);
+assert.match(lambdaLatex, /data-tex="\\lambda=\\frac\{n\}\{A\}"/, 'density equations in prose should render as inline KaTeX');
+
+const rawLatexLeakPattern = /\\(?:sum|frac|sqrt|bar|chi|lambda|pi|left|right|hat|beta|alpha|mu|sigma|mathbf|mathrm|begin|operatorname)/;
+const removeMathSpans = (html) => html.replace(/<span class="math-inline text-math"[^>]*>.*?<\/span>/g, '');
+for (const lectureId of lectureIds) {
+  for (const [index, formula] of (enhancements[lectureId].formulas || []).entries()) {
+    const textFields = [
+      formula.read,
+      formula.decision,
+      formula.why,
+      ...(formula.derivation || []),
+      ...(formula.assumptions || []),
+      ...(formula.vars || []).map(([, desc]) => desc),
+    ].filter(Boolean);
+    for (const text of textFields) {
+      const outsideMath = removeMathSpans(renderRichText(text));
+      assert.doesNotMatch(outsideMath, rawLatexLeakPattern, `${lectureId} formula ${index + 1} leaks raw LaTeX in rich text: ${text}`);
+    }
+  }
+}
+
 assert.ok(appSource.includes('formulaVarItems'), 'formula cards should render merged variable explanations');
 assert.ok(appSource.includes('variableGlossary'), 'formula cards should have fallback explanations for common symbols');
 for (const requiredInlineToken of ['Moran’s I', 'K(d)=πd²', 'F=(R²/k)', 'IoU=TP/(TP+FP+FN)', 'PSNR=10log10']) {

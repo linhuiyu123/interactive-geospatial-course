@@ -75,6 +75,8 @@
     { label: 'd_i^2/h^2', pattern: /d_i\^2\/h\^2/g, tex: String.raw`\frac{d_i^2}{h^2}` },
     { label: '1/h^2', pattern: /1\/h\^2/g, tex: String.raw`\frac{1}{h^2}` },
     { label: 'K_CSR(d)', pattern: /K_CSR\(d\)/g, tex: String.raw`K_{\mathrm{CSR}}(d)` },
+    { label: 'RSS=(y-Xβ)^T(y-Xβ)', pattern: /RSS=\(y-Xβ\)\^T\(y-Xβ\)/g, tex: String.raw`\mathrm{RSS}=(\mathbf{y}-X\boldsymbol{\beta})^\mathsf{T}(\mathbf{y}-X\boldsymbol{\beta})` },
+    { label: 'y=Xβ+ε', pattern: /y=Xβ\+ε/g, tex: String.raw`\mathbf{y}=X\boldsymbol{\beta}+\boldsymbol{\varepsilon}` },
     { label: 'X^T X β=X^T y', pattern: /X\^T X β=X\^T y/g, tex: String.raw`X^\mathsf{T}X\boldsymbol{\beta}=X^\mathsf{T}\mathbf{y}` },
     { label: 'X^T W_i X', pattern: /X\^T W_i X/g, tex: String.raw`X^\mathsf{T}W_iX` },
     { label: 'X^T X', pattern: /X\^T X/g, tex: String.raw`X^\mathsf{T}X` },

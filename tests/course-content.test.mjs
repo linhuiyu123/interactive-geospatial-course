@@ -123,8 +123,10 @@ const fractionLatex = renderRichText(String.raw`所以先用 s^2/\bar{x} 衡量�
 assert.match(fractionLatex, /data-tex="\\frac\{s\^2\}\{\\bar\{x\}\}"/, 'slash fractions in prose should render as stacked KaTeX fractions');
 const lambdaLatex = renderRichText(String.raw`由点密度 \lambda=n/A 得到期望距离。`);
 assert.match(lambdaLatex, /data-tex="\\lambda=\\frac\{n\}\{A\}"/, 'density equations in prose should render as inline KaTeX');
+const matrixLatex = renderRichText('写出残差平方和 RSS=(y-Xβ)^T(y-Xβ)。');
+assert.match(matrixLatex, /data-tex="\\mathrm\{RSS\}=\(\\mathbf\{y\}-X\\boldsymbol\{\\beta\}\)\^\\mathsf\{T\}\(\\mathbf\{y\}-X\\boldsymbol\{\\beta\}\)"/, 'matrix transpose formulas should render as one inline KaTeX expression');
 
-const rawLatexLeakPattern = /\\(?:sum|frac|sqrt|bar|chi|lambda|pi|left|right|hat|beta|alpha|mu|sigma|mathbf|mathrm|begin|operatorname)/;
+const rawLatexLeakPattern = /\\(?:sum|frac|sqrt|bar|chi|lambda|pi|left|right|hat|beta|alpha|mu|sigma|mathbf|mathrm|begin|operatorname)|\^[A-Za-z]/;
 const removeMathSpans = (html) => html.replace(/<span class="math-inline text-math"[^>]*>.*?<\/span>/g, '');
 for (const lectureId of lectureIds) {
   for (const [index, formula] of (enhancements[lectureId].formulas || []).entries()) {

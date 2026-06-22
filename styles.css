@@ -737,3 +737,214 @@ body,
   .calc-input-row { align-items:stretch; }
   .calc-input-row input { flex:1 1 140px; width:auto; }
 }
+
+/* ===== 阅读性修正：中文缩进、步骤拆分、行内公式和交互图像 ===== */
+.text-block,
+.zh-prose p,
+.formula-read,
+.formula-decision p,
+.formula-why p,
+.concept-bridge-grid p,
+.method-primer-grid p,
+.translation-card p,
+.case-body > p:not(.case-kicker),
+.calc-stem,
+.calc-hint,
+.calc-solution-steps p,
+.study-modal-body p {
+  text-indent: 2em;
+  line-height: 1.9;
+}
+
+.formula-vars span,
+.metric span,
+.option,
+.route-chip,
+.status-pill,
+.eyebrow,
+.calc-title h4,
+.calc-input-row,
+.kernel-controls,
+.formula-visual figcaption {
+  text-indent: 0;
+}
+
+.key-point {
+  color: #0f6f8b;
+  font-weight: 850;
+  background: linear-gradient(transparent 58%, rgba(132, 204, 222, .32) 58%);
+  padding: 0 .08em;
+}
+
+.text-math {
+  text-indent: 0;
+  display: inline-block;
+  margin: 0 .08em;
+  vertical-align: -.05em;
+}
+
+.formula-visual figcaption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  line-height: 1.7;
+}
+
+.formula-interactive {
+  overflow: visible;
+}
+
+.kernel-demo {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(230px, .8fr);
+  gap: 14px;
+  padding: 14px;
+  background: #f8fbfc;
+}
+
+.kernel-controls {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.kernel-controls button {
+  border: 1px solid #d4e4eb;
+  border-radius: 8px;
+  background: #fff;
+  color: #405d6d;
+  padding: 7px 10px;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.kernel-controls button.is-active,
+.kernel-controls button:hover {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent), white 50%);
+  background: color-mix(in srgb, var(--accent), white 92%);
+}
+
+.kernel-canvas-wrap {
+  min-width: 0;
+  border: 1px solid #dce8ee;
+  border-radius: 11px;
+  background: white;
+  padding: 8px;
+}
+
+.kernel-canvas-wrap canvas {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.kernel-reading {
+  border: 1px solid #dce8ee;
+  border-radius: 11px;
+  background: white;
+  padding: 12px;
+  min-width: 0;
+}
+
+.kernel-equation {
+  min-height: 70px;
+  padding: 10px;
+  border-radius: 9px;
+  background: #112e3f;
+  color: #f5fbfe;
+  overflow-x: auto;
+}
+
+.kernel-equation .katex {
+  color: #f5fbfe;
+}
+
+.visual-modal {
+  width: min(980px, 94vw);
+}
+
+.visual-modal-card {
+  width: 100%;
+}
+
+.visual-modal-body .formula-visual {
+  margin: 0;
+}
+
+.visual-modal-body .kernel-demo {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.calc-note {
+  font-size: 13px !important;
+  line-height: 1.75;
+}
+
+.calc-note > p {
+  margin: 6px 0 0;
+}
+
+.calc-result {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.calc-result strong {
+  font-size: 14px;
+}
+
+.calc-result span {
+  color: #486675;
+  font-weight: 750;
+}
+
+.calc-solution-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 9px;
+}
+
+.calc-solution-steps li {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  border: 1px solid rgba(150, 185, 198, .38);
+  border-radius: 9px;
+  padding: 9px 10px;
+  background: rgba(255,255,255,.62);
+}
+
+.calc-solution-steps li > span {
+  color: var(--accent);
+  font-weight: 850;
+  font-size: 12px;
+  text-indent: 0;
+}
+
+.calc-solution-steps p {
+  margin: 0;
+}
+
+@media (max-width: 760px) {
+  .kernel-demo {
+    grid-template-columns: 1fr;
+  }
+
+  .formula-visual figcaption {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .calc-solution-steps li {
+    grid-template-columns: 1fr;
+  }
+}

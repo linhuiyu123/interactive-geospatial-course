@@ -6,6 +6,7 @@ const dataSource = readFileSync(new URL('../data.js', import.meta.url), 'utf8');
 const enhancementSource = readFileSync(new URL('../enhancements.js', import.meta.url), 'utf8');
 const formulaSource = readFileSync(new URL('../formula-upgrades.js', import.meta.url), 'utf8');
 const appSource = readFileSync(new URL('../app.js', import.meta.url), 'utf8');
+const stylesSource = readFileSync(new URL('../styles.css', import.meta.url), 'utf8');
 
 const sandbox = { window: {} };
 vm.createContext(sandbox);
@@ -96,6 +97,12 @@ assert.ok(appSource.includes('data-study-open'), 'readable blocks should expose 
 assert.ok(appSource.includes('renderMethodPrimer'), 'Lect.4 should render a method primer before formulas');
 assert.ok(appSource.includes('patternLabMode'), 'Lect.4 lab should support multiple demo modes');
 assert.ok(appSource.includes('math-inline'), 'variables such as x-bar should render as inline math instead of raw LaTeX');
+assert.ok(appSource.includes('renderRichText'), 'text paragraphs should render inline formulas instead of raw math text');
+assert.ok(appSource.includes('calc-solution-steps'), 'calculation explanations should be split into readable steps');
+assert.ok(appSource.includes('data-kernel-control'), 'kernel function visual should be interactive and switchable');
+assert.ok(appSource.includes('openVisualModal'), 'formula visuals should be viewable in a standalone enlarged modal');
+assert.ok(stylesSource.includes('text-indent: 2em'), 'Chinese prose should use two-character first-line indentation');
+assert.ok(stylesSource.includes('.key-point'), 'important terms should have bold/color emphasis');
 
 const labNotes = sandbox.window.LAB_DEMO_NOTES;
 assert.ok(labNotes, 'labs should have supplemental explanation data');

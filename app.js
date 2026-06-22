@@ -20,6 +20,48 @@
   const strip = (s) => String(s).replace(/<[^>]*>/g, '');
   const studyText = (parts) => (Array.isArray(parts) ? parts : [parts]).filter(Boolean).join('\n\n');
   const studyButton = (title, body) => `<button type="button" class="study-open" data-study-open data-study-title="${esc(title)}" data-study-body="${esc(body)}">放大阅读</button>`;
+  const mathInline = (tex, label = tex) => `<span class="math-inline text-math" data-tex="${esc(tex)}">${esc(label)}</span>`;
+
+  const inlineMathRules = [
+    [/χ²=\(m−1\)s²\/x̄/g, String.raw`\chi^2=(m-1)\frac{s^2}{\bar{x}}`],
+    [/χ²=\(12−1\)×2\.00=22\.00/g, String.raw`\chi^2=(12-1)\times 2.00=22.00`],
+    [/VMR=8\.4\/4\.2=2\.00/g, String.raw`\mathrm{VMR}=\frac{8.4}{4.2}=2.00`],
+    [/VMR=s²\/x̄/g, String.raw`\mathrm{VMR}=\frac{s^2}{\bar{x}}`],
+    [/z=\(Rₒ−Rₑ\)\/SE/g, String.raw`z=\frac{R_o-R_e}{SE}`],
+    [/z=\(140−200\)\/25=−60\/25=−2\.40/g, String.raw`z=\frac{140-200}{25}=\frac{-60}{25}=-2.40`],
+    [/s²\/x̄/g, String.raw`\frac{s^2}{\bar{x}}`],
+    [/x̄/g, String.raw`\bar{x}`],
+    [/s²/g, String.raw`s^2`],
+    [/Rₒ/g, String.raw`R_o`],
+    [/Rₑ/g, String.raw`R_e`],
+    [/χ²/g, String.raw`\chi^2`],
+    [/\bVMR\b/g, String.raw`\mathrm{VMR}`],
+    [/\bCSR\b/g, String.raw`\mathrm{CSR}`],
+    [/\bSE\b/g, String.raw`\mathrm{SE}`],
+    [/\bz\b/g, String.raw`z`],
+    [/−1\.96/g, String.raw`-1.96`],
+  ];
+
+  function renderRichText(text) {
+    let html = esc(text || '');
+    inlineMathRules.forEach(([pattern, tex]) => {
+      html = html.replace(pattern, (match) => mathInline(tex, match));
+    });
+    html = html.replace(/(零假设|备择假设|标准误|显著|拒绝随机分布|拒绝 CSR|不能拒绝 CSR|聚集|离散|随机|带宽|核函数|蒙特卡洛|p 值|z 检验|上侧临界值)/g, '<strong class="key-point">$1</strong>');
+    return html;
+  }
+
+  function splitCalcSteps(calculation) {
+    const pieces = String(calculation.explanation || '')
+      .split(/[；;。]/)
+      .map((part) => part.trim())
+      .filter(Boolean);
+    const labels = ['公式与代入', '计算结果', '统计判断', '空间含义'];
+    return pieces.map((text, index) => ({
+      label: labels[index] || `步骤 ${index + 1}`,
+      text,
+    }));
+  }
 
   function getProgress() {
     const all = LECTURES.flatMap(l => l.sections.map((_, i) => sectionKey(l.id, i)));
@@ -329,33 +371,34 @@
     </div>`;
   }
 
+  function renderKernelFamilyVisual() {
+    return `<figure class="formula-visual formula-visual-wide formula-interactive" data-formula-visual="kernel-family">
+      <figcaption>
+        <span><strong class="key-point">核函数是距离权重曲线。</strong>切换不同核函数，观察中心点、边界点的贡献如何变化。</span>
+        <button type="button" class="study-open visual-open" data-open-visual="kernel-family">单独查看</button>
+      </figcaption>
+      <div class="kernel-demo">
+        <div class="kernel-controls" data-kernel-control>
+          <button type="button" data-kernel-kind="uniform">均匀核</button>
+          <button type="button" data-kernel-kind="triangular">三角核</button>
+          <button type="button" data-kernel-kind="epanechnikov">Epanechnikov</button>
+          <button type="button" data-kernel-kind="biweight" class="is-active">Biweight</button>
+        </div>
+        <div class="kernel-canvas-wrap">
+          <canvas data-kernel-canvas width="760" height="330"></canvas>
+        </div>
+        <div class="kernel-reading zh-prose">
+          <div class="kernel-equation math-display" data-kernel-formula data-tex=""></div>
+          <p data-kernel-text></p>
+        </div>
+      </div>
+    </figure>`;
+  }
+
   function renderFormulaVisual(visual) {
     if (!visual || !visual.type) return '';
     if (visual.type === 'kernel-family') {
-      return `<figure class="formula-visual formula-visual-wide">
-        <figcaption>核函数形状对比：同一带宽内，中心点贡献最高，越靠近边界贡献越低。</figcaption>
-        <svg viewBox="0 0 720 300" role="img" aria-label="Kernel function curves">
-          <rect width="720" height="300" rx="12" fill="#f8fbfc"/>
-          <g transform="translate(62 36)">
-            <path d="M0 190 H600" stroke="#9bb0ba" stroke-width="2"/>
-            <path d="M300 190 V14" stroke="#c2d0d6" stroke-width="2" stroke-dasharray="5 6"/>
-            <text x="0" y="218" fill="#536b78" font-size="13">u=-1</text>
-            <text x="291" y="218" fill="#536b78" font-size="13">0</text>
-            <text x="574" y="218" fill="#536b78" font-size="13">u=1</text>
-            <path d="M0 110 H600" fill="none" stroke="#7c8d99" stroke-width="4" stroke-linecap="round"/>
-            <path d="M0 190 L300 38 L600 190" fill="none" stroke="#d46a57" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M0 190 C115 70 485 70 600 190" fill="none" stroke="#1c7f92" stroke-width="4" stroke-linecap="round"/>
-            <path d="M0 190 C95 178 126 42 300 42 C474 42 505 178 600 190" fill="none" stroke="#7463b6" stroke-width="4" stroke-linecap="round"/>
-            <g transform="translate(24 12)" font-size="13" fill="#304d5b" font-weight="700">
-              <rect x="0" y="0" width="170" height="78" rx="8" fill="#fff" stroke="#dbe7ec"/>
-              <circle cx="16" cy="21" r="5" fill="#7c8d99"/><text x="30" y="25">uniform</text>
-              <circle cx="16" cy="43" r="5" fill="#d46a57"/><text x="30" y="47">triangular</text>
-              <circle cx="16" cy="65" r="5" fill="#1c7f92"/><text x="30" y="69">Epanechnikov</text>
-              <circle cx="105" cy="43" r="5" fill="#7463b6"/><text x="119" y="47">biweight</text>
-            </g>
-          </g>
-        </svg>
-      </figure>`;
+      return renderKernelFamilyVisual();
     }
     if (visual.type === 'distance-decay') {
       return `<figure class="formula-visual formula-visual-wide">
@@ -422,21 +465,21 @@
       <h3>${esc(f.name || '')}</h3>
       ${f.source ? `<p class="formula-source">${esc(f.source)}</p>` : ''}
       <div class="formula-display math-display" data-tex="${esc(latex)}">${esc(latex)}</div>
-      <p class="formula-read"><strong>怎么读：</strong>${esc(f.read || '')}</p>
-      <div class="formula-vars">${(f.vars || []).map(v => `<div><b class="math-inline" data-tex="${esc(v[0])}">${esc(v[0])}</b><span>${esc(v[1])}</span></div>`).join('')}</div>
+      <p class="formula-read text-block"><strong>怎么读：</strong>${renderRichText(f.read || '')}</p>
+      <div class="formula-vars">${(f.vars || []).map(v => `<div><b class="math-inline" data-tex="${esc(v[0])}">${esc(v[0])}</b><span>${renderRichText(v[1])}</span></div>`).join('')}</div>
       <div class="formula-deep-grid">
         <section class="formula-derivation">
           <h4>推导过程 ${studyButton(`${f.name || ''}：推导过程`, studyText(f.derivation || []))}</h4>
-          <ol>${(f.derivation || []).map(step => `<li>${esc(step)}</li>`).join('')}</ol>
+          <ol>${(f.derivation || []).map(step => `<li>${renderRichText(step)}</li>`).join('')}</ol>
         </section>
         <section class="formula-assumptions">
           <h4>前提与易错点 ${studyButton(`${f.name || ''}：前提与易错点`, studyText(f.assumptions || []))}</h4>
-          <ul>${(f.assumptions || []).map(item => `<li>${esc(item)}</li>`).join('')}</ul>
+          <ul>${(f.assumptions || []).map(item => `<li>${renderRichText(item)}</li>`).join('')}</ul>
         </section>
       </div>
       ${visual}
-      <div class="formula-decision"><span>结果判断</span><p>${esc(f.decision || '')}</p></div>
-      <details class="formula-why"><summary>为什么可以这样理解？</summary><p>${esc(f.why || '')}</p></details>
+      <div class="formula-decision"><span>结果判断</span><p>${renderRichText(f.decision || '')}</p></div>
+      <details class="formula-why"><summary>为什么可以这样理解？</summary><p>${renderRichText(f.why || '')}</p></details>
     </article>`;
   }
 
@@ -448,7 +491,7 @@
         <h3>先把公式放回 GIS 空间概念里</h3>
       </div>
       <div class="concept-bridge-grid">
-        ${items.map(([title, text]) => `<article><strong>${esc(title)}</strong><p>${esc(text)}</p></article>`).join('')}
+        ${items.map(([title, text]) => `<article><strong>${esc(title)}</strong><p>${renderRichText(text)}</p></article>`).join('')}
       </div>
     </section>`;
   }
@@ -459,13 +502,13 @@
       <div class="method-primer-head">
         <p class="eyebrow">先补基础</p>
         <h3>${esc(primer.title)}</h3>
-        <p>${esc(primer.lead || '')}</p>
+        <p>${renderRichText(primer.lead || '')}</p>
         ${studyButton(primer.title, studyText([primer.lead, ...primer.sections.map((section) => `${section.title}\n${section.body}`)]))}
       </div>
       <div class="method-primer-grid">
         ${primer.sections.map((section) => `<article>
           <h4>${esc(section.title)}</h4>
-          <p>${esc(section.body)}</p>
+          <p>${renderRichText(section.body)}</p>
         </article>`).join('')}
       </div>
     </section>`;
@@ -488,6 +531,111 @@
         strict: 'ignore',
         trust: false,
       });
+    });
+  }
+
+  function mountFormulaVisuals(root = document) {
+    const kernels = {
+      uniform: {
+        label: '均匀核',
+        color: '#7c8d99',
+        latex: String.raw`K(u)=\begin{cases}\frac{1}{2},&|u|\le 1\\0,&|u|>1\end{cases}`,
+        read: '带宽内的点贡献相同，边界是硬切断；适合理解“窗口计数”，但不够平滑。',
+        value: (u) => Math.abs(u) <= 1 ? 0.5 : 0,
+      },
+      triangular: {
+        label: '三角核',
+        color: '#d46a57',
+        latex: String.raw`K(u)=\begin{cases}1-|u|,&|u|\le 1\\0,&|u|>1\end{cases}`,
+        read: '从中心到边界线性递减，比均匀核更强调近距离点。',
+        value: (u) => Math.abs(u) <= 1 ? 1 - Math.abs(u) : 0,
+      },
+      epanechnikov: {
+        label: 'Epanechnikov 核',
+        color: '#1c7f92',
+        latex: String.raw`K(u)=\begin{cases}\frac{3}{4}(1-u^2),&|u|\le 1\\0,&|u|>1\end{cases}`,
+        read: '中心权重大，向边界按二次曲线衰减，是核密度估计里常见的平滑权重。',
+        value: (u) => Math.abs(u) <= 1 ? 0.75 * (1 - u * u) : 0,
+      },
+      biweight: {
+        label: 'Biweight 核',
+        color: '#7463b6',
+        latex: String.raw`K(u)=\begin{cases}\frac{15}{16}(1-u^2)^2,&|u|\le 1\\0,&|u|>1\end{cases}`,
+        read: '中心附近贡献更集中，边界附近衰减更柔和；ArcGIS 核密度公式常用这一类四次曲线。',
+        value: (u) => Math.abs(u) <= 1 ? (15 / 16) * (1 - u * u) ** 2 : 0,
+      },
+    };
+
+    function draw(container, kind) {
+      const canvas = container.querySelector('[data-kernel-canvas]');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const w = canvas.width, h = canvas.height;
+      const pad = { left: 62, right: 30, top: 30, bottom: 54 };
+      const plotW = w - pad.left - pad.right;
+      const plotH = h - pad.top - pad.bottom;
+      const active = kernels[kind] || kernels.biweight;
+      const x = (u) => pad.left + ((u + 1.15) / 2.3) * plotW;
+      const y = (v) => pad.top + (1 - v / 1.05) * plotH;
+
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = '#f8fbfc';
+      ctx.fillRect(0, 0, w, h);
+      ctx.strokeStyle = '#c7d9e1';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(pad.left, y(0));
+      ctx.lineTo(w - pad.right, y(0));
+      ctx.moveTo(x(0), pad.top - 5);
+      ctx.lineTo(x(0), h - pad.bottom);
+      ctx.stroke();
+      ctx.fillStyle = '#587180';
+      ctx.font = '13px system-ui';
+      ctx.fillText('u=-1', x(-1) - 16, h - 20);
+      ctx.fillText('0', x(0) - 4, h - 20);
+      ctx.fillText('u=1', x(1) - 12, h - 20);
+      ctx.fillText('K(u)', 20, pad.top + 4);
+
+      Object.entries(kernels).forEach(([id, kernel]) => {
+        ctx.beginPath();
+        for (let i = 0; i <= 180; i++) {
+          const u = -1.15 + (2.3 * i) / 180;
+          const px = x(u);
+          const py = y(kernel.value(u));
+          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.strokeStyle = id === kind ? kernel.color : 'rgba(111,132,145,.26)';
+        ctx.lineWidth = id === kind ? 4 : 2;
+        ctx.stroke();
+      });
+
+      ctx.fillStyle = active.color;
+      ctx.font = 'bold 16px system-ui';
+      ctx.fillText(active.label, pad.left, 24);
+      ctx.fillStyle = '#385867';
+      ctx.font = '13px system-ui';
+      ctx.fillText('同一带宽内，曲线越高表示该距离位置的点对密度贡献越大。', pad.left + 116, 24);
+
+      const formula = container.querySelector('[data-kernel-formula]');
+      const text = container.querySelector('[data-kernel-text]');
+      if (formula) {
+        formula.dataset.tex = active.latex;
+        formula.textContent = active.latex;
+        if (window.katex) window.katex.render(active.latex, formula, { displayMode: true, throwOnError: false, strict: 'ignore' });
+      }
+      if (text) text.innerHTML = renderRichText(active.read);
+      container.querySelectorAll('[data-kernel-kind]').forEach((button) => {
+        button.classList.toggle('is-active', button.dataset.kernelKind === kind);
+      });
+    }
+
+    root.querySelectorAll('[data-formula-visual="kernel-family"]').forEach((container) => {
+      if (container.dataset.kernelMounted === '1') return;
+      container.dataset.kernelMounted = '1';
+      container.querySelectorAll('[data-kernel-kind]').forEach((button) => {
+        button.addEventListener('click', () => draw(container, button.dataset.kernelKind));
+      });
+      draw(container, 'biweight');
     });
   }
 
@@ -554,14 +702,18 @@
   function renderQuiz(l) {
     const qs = fullQuiz(l); const calcs = enhance(l).calculations || [];
     return `<div class="quiz-card"><p class="eyebrow">概念自测</p><h2>先判断，再看解释</h2><p class="quiz-intro">本讲共 ${qs.length} 道选择题，后面还有 ${calcs.length} 道可输入答案的计算题。答错并不扣分，重点是看“为什么”。</p><div class="quiz-stack">${qs.map((q,qi) => `<div class="question" data-quiz="${qi}"><p>${qi+1}. ${esc(q.q)}</p><div class="options">${q.options.map((o,oi) => `<button type="button" class="option" data-quiz-option="${qi}" data-option="${oi}">${String.fromCharCode(65+oi)}. ${esc(o)}</button>`).join('')}</div><p class="answer-note" id="answer-${qi}"></p></div>`).join('')}</div>
-      <div class="calculation-area"><div class="calculation-header"><p class="eyebrow">公式与检验训练</p><h3>先写统计量，再判断含义</h3><p>按题目指定的小数位输入。结果为小数时，输入 <strong>0.85</strong>，不要输入 <strong>85%</strong>；显著性结论会在解析中给出。</p></div><div class="calculation-stack">${calcs.map((c,ci) => `<article class="calc-question"><div class="calc-title"><span>计算 ${ci+1}</span><h4>${esc(c.title)}</h4></div><p>${esc(c.stem)}</p><p class="calc-hint">提示：${esc(c.hint)}</p><div class="calc-input-row"><label for="calc-${ci}">你的答案</label><input id="calc-${ci}" inputmode="decimal" autocomplete="off" placeholder="例如 0.85" /><span>${esc(c.unit || '')}</span><button type="button" class="control-button" data-check-calc="${ci}">核对答案</button></div><p class="calc-note" id="calc-note-${ci}"></p></article>`).join('')}</div></div>
+      <div class="calculation-area"><div class="calculation-header"><p class="eyebrow">公式与检验训练</p><h3>先写统计量，再判断含义</h3><p>按题目指定的小数位输入。结果为小数时，输入 <strong>0.85</strong>，不要输入 <strong>85%</strong>；显著性结论会在解析中给出。</p></div><div class="calculation-stack">${calcs.map((c,ci) => `<article class="calc-question"><div class="calc-title"><span>计算 ${ci+1}</span><h4>${esc(c.title)}</h4></div><p class="calc-stem text-block">${renderRichText(c.stem)}</p><p class="calc-hint text-block">提示：${renderRichText(c.hint)}</p><div class="calc-input-row"><label for="calc-${ci}">你的答案</label><input id="calc-${ci}" inputmode="decimal" autocomplete="off" placeholder="例如 0.85" /><span>${esc(c.unit || '')}</span><button type="button" class="control-button" data-check-calc="${ci}">核对答案</button></div><div class="calc-note" id="calc-note-${ci}"></div></article>`).join('')}</div></div>
     </div>`;
   }
 
   function handleCalc(ci) {
     const l=current(), c=(enhance(l).calculations || [])[ci]; if(!c) return; const input=$(`#calc-${ci}`), note=$(`#calc-note-${ci}`); const raw=input.value.trim().replace(/，/g, '.').replace(/%/g, ''); const val=Number(raw);
-    if(!Number.isFinite(val)){ note.textContent='请先输入一个有效数字，例如 0.85 或 28.13。'; note.className='calc-note is-show is-wrong'; return; }
-    const ok=Math.abs(val-c.answer) <= (c.tolerance ?? 0.01); note.textContent=`${ok?'计算正确。':'需要再核对。'} ${c.explanation}`; note.className=`calc-note is-show ${ok?'is-correct':'is-wrong'}`;
+    if(!Number.isFinite(val)){ note.innerHTML='<strong>请先输入一个有效数字</strong><p>例如 0.85 或 28.13。</p>'; note.className='calc-note is-show is-wrong'; return; }
+    const ok=Math.abs(val-c.answer) <= (c.tolerance ?? 0.01);
+    const steps = splitCalcSteps(c);
+    note.innerHTML = `<div class="calc-result"><strong>${ok?'计算正确。':'需要再核对。'}</strong><span>参考答案：${esc(c.answer)}${esc(c.unit || '')}</span></div><ol class="calc-solution-steps">${steps.map((step) => `<li><span>${esc(step.label)}</span><p>${renderRichText(step.text)}</p></li>`).join('')}</ol>`;
+    note.className=`calc-note is-show ${ok?'is-correct':'is-wrong'}`;
+    renderMathBlocks(note);
   }
 
 
@@ -580,7 +732,8 @@
       $('#tabContent .formula-hero')?.insertAdjacentHTML('afterend', `${renderMethodPrimer(e.methodPrimer)}${renderConceptBridge(e.conceptBridge)}`);
     }
     if (state.tab === 'lab') mountLab(l.lab);
-    if (state.tab === 'formula' || state.tab === 'lab') renderMathBlocks($('#tabContent'));
+    if (state.tab === 'formula' || state.tab === 'lab' || state.tab === 'quiz') renderMathBlocks($('#tabContent'));
+    if (state.tab === 'formula') mountFormulaVisuals($('#tabContent'));
   }
 
   function renderAll() {
@@ -1164,6 +1317,7 @@
       const slide=e.target.closest('[data-slide-src]'); if(slide){openSlide(slide.dataset.slideSrc,slide.dataset.slideCaption);return;}
       const opt=e.target.closest('[data-quiz-option]'); if(opt){handleQuiz(+opt.dataset.quizOption,+opt.dataset.option);return;}
       const calc=e.target.closest('[data-check-calc]'); if(calc){handleCalc(+calc.dataset.checkCalc);return;}
+      const visual=e.target.closest('[data-open-visual]'); if(visual){openVisualModal(visual.dataset.openVisual);return;}
       const study=e.target.closest('[data-study-open]'); if(study){openStudyModal(study.dataset.studyTitle, study.dataset.studyBody);return;}
       if(e.target.id==='saveNote'){const l=current();const map=notes();map[l.id]=$('#noteEditor').value;safeSet(notesKey,map);$('#noteStatus').textContent='已保存到此浏览器。';return;}
     });
@@ -1172,6 +1326,8 @@
     $('#slideModal').addEventListener('click',e=>{if(e.target.id==='slideModal')$('#slideModal').close();});
     $('#studyModalClose').addEventListener('click',()=>$('#studyModal').close());
     $('#studyModal').addEventListener('click',e=>{if(e.target.id==='studyModal')$('#studyModal').close();});
+    $('#visualModalClose').addEventListener('click',()=>$('#visualModal').close());
+    $('#visualModal').addEventListener('click',e=>{if(e.target.id==='visualModal')$('#visualModal').close();});
     $('#showRoadmap').addEventListener('click',()=>{$('#roadmapModal').hidden=false;document.body.style.overflow='hidden';});
     $('#roadmapClose').addEventListener('click',()=>{$('#roadmapModal').hidden=true;document.body.style.overflow='';});
     $('#roadmapModal').addEventListener('click',e=>{if(e.target.id==='roadmapModal'){$('#roadmapModal').hidden=true;document.body.style.overflow='';}});
@@ -1189,6 +1345,16 @@
       .map(part => `<p>${esc(part).replace(/\n/g, '<br>')}</p>`)
       .join('');
     modal.showModal();
+  }
+
+  function openVisualModal(type) {
+    const modal = $('#visualModal');
+    const title = type === 'kernel-family' ? '核函数图像：距离权重如何衰减' : '函数图像演示';
+    $('#visualModalTitle').textContent = title;
+    $('#visualModalBody').innerHTML = type === 'kernel-family' ? renderKernelFamilyVisual() : '<p>这个图像暂未配置单独演示。</p>';
+    modal.showModal();
+    mountFormulaVisuals(modal);
+    renderMathBlocks(modal);
   }
 
   function search(e){const q=e.target.value.trim().toLowerCase();const box=$('#searchResults');if(!q){box.innerHTML='';return;}const res=[];LECTURES.forEach(l=>{const hay=(l.title+' '+l.en+' '+l.intro+' '+l.route.join(' ')+' '+l.sections.map(s=>s.title+' '+strip(s.core)+' '+s.details.join(' ')).join(' ')).toLowerCase();if(hay.includes(q)){const match=l.sections.find(s=>(s.title+' '+strip(s.core)+' '+s.details.join(' ')).toLowerCase().includes(q));res.push({id:l.id,title:`${l.number} · ${l.title}`,text:match?match.title:l.intro});}});box.innerHTML=res.slice(0,8).map(r=>`<button class="search-result" type="button" data-nav-id="${r.id}"><strong>${esc(r.title)}</strong>${esc(r.text)}</button>`).join('')||'<div style="padding:7px;color:#a6c1ce;font-size:12px">没有匹配到。可试试英文术语或更短关键词。</div>';}

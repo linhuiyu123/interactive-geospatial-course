@@ -263,6 +263,35 @@
     return `<div class="lab-shell">${renderers[l.lab] ? renderers[l.lab]() : '<div class="lab-card">本讲没有配置互动实验。</div>'}</div>`;
   }
 
+  function renderLabSupplement(labName) {
+    const note = window.LAB_DEMO_NOTES && window.LAB_DEMO_NOTES[labName];
+    if (!note) return '';
+    return `<article class="lab-supplement">
+      <div class="lab-supplement-head">
+        <p class="eyebrow">补全 PPT 省略步骤</p>
+        <h3>${esc(note.title)}</h3>
+      </div>
+      <div class="lab-equation math-display" data-tex="${esc(note.latex)}">${esc(note.latex)}</div>
+      <div class="lab-explain-grid">
+        <section>
+          <h4>怎么操作</h4>
+          <ol>${note.steps.map((step) => `<li>${esc(step)}</li>`).join('')}</ol>
+        </section>
+        <section>
+          <h4>观察什么</h4>
+          <ul>${note.observe.map((item) => `<li>${esc(item)}</li>`).join('')}</ul>
+        </section>
+      </div>
+      <p class="lab-takeaway"><strong>理解重点：</strong>${esc(note.takeaway)}</p>
+    </article>`;
+  }
+
+  function renderLab(l) {
+    const renderers = { pattern: renderPatternLab, moran: renderMoranLab, regression: renderRegressionLab, project: renderProjectLab, cluster: renderClusterLab, forest: renderForestLab, spacetime: renderSpacetimeLab, cnn: renderCnnLab, bigdata: renderBigDataLab, superres: renderSuperResLab };
+    const demo = renderers[l.lab] ? renderers[l.lab]() : '<div class="lab-card">本讲暂未配置互动实验。</div>';
+    return `<div class="lab-shell">${demo}${renderLabSupplement(l.lab)}</div>`;
+  }
+
   function renderSlides(l) {
     return `<div class="slide-section-header"><div><p class="eyebrow">课件图示</p><h2>六张关键页，带着目的回看原始课件</h2></div><p>点击任一页可放大；完整资料请使用页面顶部“打开原始 PDF”。</p></div>
       <div class="slide-gallery">${l.slides.map(slide => `<button type="button" class="slide-card" data-slide-src="${slide.src}" data-slide-caption="${esc(slide.label)}"><img loading="lazy" src="${slide.src}" alt="${esc(slide.label)}" /><span>${esc(slide.label)}</span></button>`).join('')}</div>`;
@@ -282,6 +311,7 @@
         <h2>${esc(l.title)}：公式、变量与判断逻辑</h2>
         <p>不要求死背符号。每张卡都按“<strong>公式是什么 → 每个符号表示什么 → 算出来怎么解释 → 最容易错在哪里</strong>”组织。先理解，再做计算题。</p>
       </section>
+      ${renderConceptBridge(e.conceptBridge)}
       <div class="formula-stack">
         ${cards.map((f, i) => `<article class="formula-card">
           <div class="formula-card-head"><span class="formula-index">公式 ${String(i+1).padStart(2,'0')}</span><span class="formula-tag">${f.tag}</span></div>
@@ -294,6 +324,158 @@
         </article>`).join('') || '<p class="empty-hint">本讲暂未配置公式卡。</p>'}
       </div>
       <section class="formula-reminder"><strong>计算题的四步：</strong>① 先写原公式；② 把题目给的数据和单位逐项代入；③ 保留中间计算；④ 写清数值对应的空间/统计含义。<span>仅写一个数字通常不够。</span></section>
+    </div>`;
+  }
+
+  function renderFormulaVisual(visual) {
+    if (!visual || !visual.type) return '';
+    if (visual.type === 'kernel-family') {
+      return `<figure class="formula-visual formula-visual-wide">
+        <figcaption>核函数形状对比：同一带宽内，中心点贡献最高，越靠近边界贡献越低。</figcaption>
+        <svg viewBox="0 0 720 300" role="img" aria-label="Kernel function curves">
+          <rect width="720" height="300" rx="12" fill="#f8fbfc"/>
+          <g transform="translate(62 36)">
+            <path d="M0 190 H600" stroke="#9bb0ba" stroke-width="2"/>
+            <path d="M300 190 V14" stroke="#c2d0d6" stroke-width="2" stroke-dasharray="5 6"/>
+            <text x="0" y="218" fill="#536b78" font-size="13">u=-1</text>
+            <text x="291" y="218" fill="#536b78" font-size="13">0</text>
+            <text x="574" y="218" fill="#536b78" font-size="13">u=1</text>
+            <path d="M0 110 H600" fill="none" stroke="#7c8d99" stroke-width="4" stroke-linecap="round"/>
+            <path d="M0 190 L300 38 L600 190" fill="none" stroke="#d46a57" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M0 190 C115 70 485 70 600 190" fill="none" stroke="#1c7f92" stroke-width="4" stroke-linecap="round"/>
+            <path d="M0 190 C95 178 126 42 300 42 C474 42 505 178 600 190" fill="none" stroke="#7463b6" stroke-width="4" stroke-linecap="round"/>
+            <g transform="translate(24 12)" font-size="13" fill="#304d5b" font-weight="700">
+              <rect x="0" y="0" width="170" height="78" rx="8" fill="#fff" stroke="#dbe7ec"/>
+              <circle cx="16" cy="21" r="5" fill="#7c8d99"/><text x="30" y="25">uniform</text>
+              <circle cx="16" cy="43" r="5" fill="#d46a57"/><text x="30" y="47">triangular</text>
+              <circle cx="16" cy="65" r="5" fill="#1c7f92"/><text x="30" y="69">Epanechnikov</text>
+              <circle cx="105" cy="43" r="5" fill="#7463b6"/><text x="119" y="47">biweight</text>
+            </g>
+          </g>
+        </svg>
+      </figure>`;
+    }
+    if (visual.type === 'distance-decay') {
+      return `<figure class="formula-visual formula-visual-wide">
+        <figcaption>距离权重衰减：GWR 中离目标位置越远的样本，对局部回归的影响越小。</figcaption>
+        <svg viewBox="0 0 720 300" role="img" aria-label="Distance decay curves">
+          <rect width="720" height="300" rx="12" fill="#f8fbfc"/>
+          <g transform="translate(68 34)">
+            <path d="M0 204 H585" stroke="#8ba1ad" stroke-width="2"/>
+            <path d="M0 204 V14" stroke="#8ba1ad" stroke-width="2"/>
+            <text x="-8" y="20" text-anchor="end" fill="#536b78" font-size="13">w</text>
+            <text x="588" y="224" fill="#536b78" font-size="13">distance</text>
+            <path d="M0 30 C70 78 140 116 220 144 C340 185 470 200 585 204" fill="none" stroke="#d46a57" stroke-width="4" stroke-linecap="round"/>
+            <path d="M0 24 C95 34 180 75 272 132 C380 189 492 205 585 205" fill="none" stroke="#1c7f92" stroke-width="4" stroke-linecap="round"/>
+            <path d="M0 28 C135 32 210 76 290 154 C328 192 348 204 374 204 H585" fill="none" stroke="#7463b6" stroke-width="4" stroke-linecap="round"/>
+            <path d="M374 204 V24" stroke="#c8d5dc" stroke-width="2" stroke-dasharray="6 7"/>
+            <text x="365" y="224" fill="#536b78" font-size="13">b</text>
+            <g transform="translate(330 28)" font-size="13" fill="#304d5b" font-weight="700">
+              <rect x="0" y="0" width="188" height="80" rx="8" fill="#fff" stroke="#dbe7ec"/>
+              <circle cx="16" cy="22" r="5" fill="#d46a57"/><text x="30" y="26">inverse distance</text>
+              <circle cx="16" cy="44" r="5" fill="#1c7f92"/><text x="30" y="48">Gaussian</text>
+              <circle cx="16" cy="66" r="5" fill="#7463b6"/><text x="30" y="70">bi-square cutoff</text>
+            </g>
+          </g>
+        </svg>
+      </figure>`;
+    }
+    if (visual.type === 'confusion-metrics') {
+      return `<figure class="formula-visual">
+        <figcaption>混淆矩阵视角：不同指标回答的是不同错误代价。</figcaption>
+        <svg viewBox="0 0 540 240" role="img" aria-label="Confusion matrix metrics">
+          <rect width="540" height="240" rx="12" fill="#f8fbfc"/>
+          <g transform="translate(48 42)">
+            <text x="162" y="-12" text-anchor="middle" font-size="13" fill="#526b78" font-weight="700">Predicted</text>
+            <text x="-30" y="88" transform="rotate(-90 -30 88)" text-anchor="middle" font-size="13" fill="#526b78" font-weight="700">Actual</text>
+            <rect x="0" y="0" width="150" height="74" rx="8" fill="#dff2e6" stroke="#badfc7"/>
+            <rect x="158" y="0" width="150" height="74" rx="8" fill="#fff0e8" stroke="#edc5b2"/>
+            <rect x="0" y="82" width="150" height="74" rx="8" fill="#fff0e8" stroke="#edc5b2"/>
+            <rect x="158" y="82" width="150" height="74" rx="8" fill="#edf3f6" stroke="#cbdde4"/>
+            <text x="75" y="43" text-anchor="middle" font-size="23" fill="#25633c" font-weight="800">TP</text>
+            <text x="233" y="43" text-anchor="middle" font-size="23" fill="#914c2d" font-weight="800">FP</text>
+            <text x="75" y="125" text-anchor="middle" font-size="23" fill="#914c2d" font-weight="800">FN</text>
+            <text x="233" y="125" text-anchor="middle" font-size="23" fill="#516a77" font-weight="800">TN</text>
+            <g transform="translate(342 8)" font-size="13" fill="#304d5b">
+              <text x="0" y="0" font-weight="800">Precision = TP / (TP + FP)</text>
+              <text x="0" y="34" font-weight="800">Recall = TP / (TP + FN)</text>
+              <text x="0" y="68" font-weight="800">IoU = TP / (TP + FP + FN)</text>
+              <text x="0" y="102" font-weight="800">F1 balances P and R</text>
+            </g>
+          </g>
+        </svg>
+      </figure>`;
+    }
+    return '';
+  }
+
+  function renderFormulaCard(f, i) {
+    const latex = f.latex || f.expression || '';
+    const visual = renderFormulaVisual(f.visual);
+    return `<article class="formula-card">
+      <div class="formula-card-head">
+        <span class="formula-index">公式 ${String(i + 1).padStart(2, '0')}</span>
+        <span class="formula-tag">${esc(f.tag || '')}</span>
+      </div>
+      <h3>${esc(f.name || '')}</h3>
+      ${f.source ? `<p class="formula-source">${esc(f.source)}</p>` : ''}
+      <div class="formula-display math-display" data-tex="${esc(latex)}">${esc(latex)}</div>
+      <p class="formula-read"><strong>怎么读：</strong>${esc(f.read || '')}</p>
+      <div class="formula-vars">${(f.vars || []).map(v => `<div><b>${esc(v[0])}</b><span>${esc(v[1])}</span></div>`).join('')}</div>
+      <div class="formula-deep-grid">
+        <section class="formula-derivation">
+          <h4>推导过程</h4>
+          <ol>${(f.derivation || []).map(step => `<li>${esc(step)}</li>`).join('')}</ol>
+        </section>
+        <section class="formula-assumptions">
+          <h4>前提与易错点</h4>
+          <ul>${(f.assumptions || []).map(item => `<li>${esc(item)}</li>`).join('')}</ul>
+        </section>
+      </div>
+      ${visual}
+      <div class="formula-decision"><span>结果判断</span><p>${esc(f.decision || '')}</p></div>
+      <details class="formula-why"><summary>为什么可以这样理解？</summary><p>${esc(f.why || '')}</p></details>
+    </article>`;
+  }
+
+  function renderConceptBridge(items) {
+    if (!Array.isArray(items) || !items.length) return '';
+    return `<section class="concept-bridge">
+      <div class="concept-bridge-head">
+        <p class="eyebrow">概念底座</p>
+        <h3>先把公式放回 GIS 空间概念里</h3>
+      </div>
+      <div class="concept-bridge-grid">
+        ${items.map(([title, text]) => `<article><strong>${esc(title)}</strong><p>${esc(text)}</p></article>`).join('')}
+      </div>
+    </section>`;
+  }
+
+  function renderMathBlocks(root = document) {
+    if (!window.katex) return;
+    root.querySelectorAll('.math-display[data-tex]').forEach(el => {
+      window.katex.render(el.dataset.tex, el, {
+        displayMode: true,
+        throwOnError: false,
+        strict: 'ignore',
+        trust: false,
+      });
+    });
+  }
+
+  function renderFormula(l) {
+    const e = enhance(l);
+    const cards = e.formulas || [];
+    return `<div class="formula-page">
+      <section class="formula-hero">
+        <p class="eyebrow">公式、推导与图像</p>
+        <h2>${esc(l.title)}：把 PPT 公式补成可计算、可解释的卡片</h2>
+        <p>每张卡都按“原公式 → 变量 → 推导过程 → 前提假设 → 结果判断”组织。公式使用 KaTeX 渲染，分式、求和、根号和分段函数都会按数学排版显示。</p>
+      </section>
+      <div class="formula-stack">
+        ${cards.map(renderFormulaCard).join('') || '<p class="empty-hint">本讲暂未配置公式卡。</p>'}
+      </div>
+      <section class="formula-reminder"><strong>答计算题时：</strong>先写零假设或模型假设，再写统计量公式，代入数值，最后用显著性或业务阈值解释空间含义。<span>只写一个数字通常不够。</span></section>
     </div>`;
   }
 
@@ -365,7 +547,11 @@
     document.querySelectorAll('.tab').forEach(btn => btn.classList.toggle('is-active', btn.dataset.tab === state.tab));
     const renderers = { guide: renderGuide, formula: renderFormula, chinese: renderChinese, cases: renderCases, lab: renderLab, slides: renderSlides, cheat: renderCheat, quiz: renderQuiz, notes: renderNotes };
     $('#tabContent').innerHTML = (renderers[state.tab] || renderGuide)(l);
+    if (state.tab === 'formula' && !$('#tabContent .concept-bridge')) {
+      $('#tabContent .formula-hero')?.insertAdjacentHTML('afterend', renderConceptBridge(enhance(l).conceptBridge));
+    }
     if (state.tab === 'lab') mountLab(l.lab);
+    if (state.tab === 'formula' || state.tab === 'lab') renderMathBlocks($('#tabContent'));
   }
 
   function renderAll() {

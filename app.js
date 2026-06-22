@@ -123,11 +123,31 @@
     return draft;
   }
 
+  const latexCommandFragmentPattern = /\\[A-Za-z]+(?:\{[^{}]*\})?(?:[_^]\{?[-+\w,]+\}?)*(?:(?:\s*(?:[=+\-*/]|\\cdot|\\times)\s*|\s+)(?:\\[A-Za-z]+(?:\{[^{}]*\})?(?:[_^]\{?[-+\w,]+\}?)*|[A-Za-z]+(?:_[A-Za-z0-9]+|\^\d+|[¹²³])?|\d+(?:\.\d+)?|\([^()]*\)))*/g;
+
+  function normalizeLatexFragment(tex) {
+    return tex
+      .replace(/¹/g, '^1')
+      .replace(/²/g, '^2')
+      .replace(/³/g, '^3')
+      .replace(/([A-Za-z])_([A-Za-z0-9]{2,})/g, '$1_{$2}')
+      .replace(/([A-Za-z])\^([0-9]+)/g, '$1^{$2}');
+  }
+
+  function renderLatexFragments(html, protect) {
+    return html.replace(latexCommandFragmentPattern, (match) => {
+      const tex = normalizeLatexFragment(match.trim());
+      if (!tex || tex === '\\text') return match;
+      return protect(tex, match);
+    });
+  }
+
   function renderRichText(text) {
     return withMathPlaceholders(esc(text || ''), (html, protect) => {
       formulaTokenRules.forEach((rule) => {
         html = html.replace(rule.pattern, (match) => protect(typeof rule.tex === 'function' ? rule.tex(match) : rule.tex, match));
       });
+      html = renderLatexFragments(html, protect);
       return html.replace(keyPointPattern, '<strong class="key-point">$1</strong>');
     });
   }

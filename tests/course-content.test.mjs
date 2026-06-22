@@ -104,6 +104,8 @@ assert.ok(appSource.includes('patternLabMode'), 'Lect.4 lab should support multi
 assert.ok(appSource.includes('math-inline'), 'variables such as x-bar should render as inline math instead of raw LaTeX');
 assert.ok(appSource.includes('renderRichText'), 'text paragraphs should render inline formulas instead of raw math text');
 assert.ok(appSource.includes('formulaTokenRules'), 'rich text formulas should use a broad token registry, not a few hard-coded examples');
+assert.ok(appSource.includes('renderLatexFragments'), 'rich text should have a generic LaTeX fallback for derivation prose');
+assert.ok(appSource.includes('latexCommandFragmentPattern'), 'generic LaTeX fallback should catch command-based fragments such as \\sum_j w_ij z_j');
 assert.ok(appSource.includes('withMathPlaceholders'), 'rich text formula rendering should protect KaTeX spans from later text highlighting');
 assert.ok(appSource.includes('renderRichText(s.core)'), 'guide core paragraphs should render inline formulas with KaTeX');
 assert.ok(appSource.includes('renderRichText(s.formula)'), 'guide formula callouts should render slash fractions and symbols with KaTeX');

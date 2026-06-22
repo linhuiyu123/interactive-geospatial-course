@@ -45,6 +45,11 @@ for (const lectureId of lectureIds) {
   for (const [index, formula] of formulas.entries()) {
     assert.equal(typeof formula.latex, 'string', `${lectureId} formula ${index + 1} needs LaTeX`);
     assert.ok(mathCommandPattern.test(formula.latex), `${lectureId} formula ${index + 1} should use mathematical layout commands`);
+    assert.ok(Array.isArray(formula.vars) && formula.vars.length >= 3, `${lectureId} formula ${index + 1} should explain at least 3 variables`);
+    for (const [symbol, explanation] of formula.vars) {
+      assert.ok(String(symbol || '').trim().length >= 1, `${lectureId} formula ${index + 1} has an empty variable symbol`);
+      assert.ok(String(explanation || '').trim().length >= 3, `${lectureId} formula ${index + 1} variable ${symbol} needs a readable explanation`);
+    }
     assert.ok(Array.isArray(formula.derivation) && formula.derivation.length >= 2, `${lectureId} formula ${index + 1} needs derivation steps`);
     assert.ok(Array.isArray(formula.assumptions) && formula.assumptions.length >= 1, `${lectureId} formula ${index + 1} needs assumptions`);
   }
@@ -98,6 +103,13 @@ assert.ok(appSource.includes('renderMethodPrimer'), 'Lect.4 should render a meth
 assert.ok(appSource.includes('patternLabMode'), 'Lect.4 lab should support multiple demo modes');
 assert.ok(appSource.includes('math-inline'), 'variables such as x-bar should render as inline math instead of raw LaTeX');
 assert.ok(appSource.includes('renderRichText'), 'text paragraphs should render inline formulas instead of raw math text');
+assert.ok(appSource.includes('formulaTokenRules'), 'rich text formulas should use a broad token registry, not a few hard-coded examples');
+assert.ok(appSource.includes('withMathPlaceholders'), 'rich text formula rendering should protect KaTeX spans from later text highlighting');
+assert.ok(appSource.includes('formulaVarItems'), 'formula cards should render merged variable explanations');
+assert.ok(appSource.includes('variableGlossary'), 'formula cards should have fallback explanations for common symbols');
+for (const requiredInlineToken of ['Moran’s I', 'K(d)=πd²', 'F=(R²/k)', 'IoU=TP/(TP+FP+FN)', 'PSNR=10log10']) {
+  assert.ok(appSource.includes(requiredInlineToken), `rich text should know how to render ${requiredInlineToken}`);
+}
 assert.ok(appSource.includes('calc-solution-steps'), 'calculation explanations should be split into readable steps');
 assert.ok(appSource.includes('data-kernel-control'), 'kernel function visual should be interactive and switchable');
 assert.ok(appSource.includes('openVisualModal'), 'formula visuals should be viewable in a standalone enlarged modal');

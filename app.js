@@ -22,33 +22,94 @@
   const studyButton = (title, body) => `<button type="button" class="study-open" data-study-open data-study-title="${esc(title)}" data-study-body="${esc(body)}">放大阅读</button>`;
   const mathInline = (tex, label = tex) => `<span class="math-inline text-math" data-tex="${esc(tex)}">${esc(label)}</span>`;
 
-  const inlineMathRules = [
-    [/χ²=\(m−1\)s²\/x̄/g, String.raw`\chi^2=(m-1)\frac{s^2}{\bar{x}}`],
-    [/χ²=\(12−1\)×2\.00=22\.00/g, String.raw`\chi^2=(12-1)\times 2.00=22.00`],
-    [/VMR=8\.4\/4\.2=2\.00/g, String.raw`\mathrm{VMR}=\frac{8.4}{4.2}=2.00`],
-    [/VMR=s²\/x̄/g, String.raw`\mathrm{VMR}=\frac{s^2}{\bar{x}}`],
-    [/z=\(Rₒ−Rₑ\)\/SE/g, String.raw`z=\frac{R_o-R_e}{SE}`],
-    [/z=\(140−200\)\/25=−60\/25=−2\.40/g, String.raw`z=\frac{140-200}{25}=\frac{-60}{25}=-2.40`],
-    [/s²\/x̄/g, String.raw`\frac{s^2}{\bar{x}}`],
-    [/x̄/g, String.raw`\bar{x}`],
-    [/s²/g, String.raw`s^2`],
-    [/Rₒ/g, String.raw`R_o`],
-    [/Rₑ/g, String.raw`R_e`],
-    [/χ²/g, String.raw`\chi^2`],
-    [/\bVMR\b/g, String.raw`\mathrm{VMR}`],
-    [/\bCSR\b/g, String.raw`\mathrm{CSR}`],
-    [/\bSE\b/g, String.raw`\mathrm{SE}`],
-    [/\bz\b/g, String.raw`z`],
-    [/−1\.96/g, String.raw`-1.96`],
+  const formulaTokenRules = [
+    { label: 'χ²=(m−1)s²/x̄', pattern: /χ²=\(m−1\)s²\/x̄/g, tex: String.raw`\chi^2=(m-1)\frac{s^2}{\bar{x}}` },
+    { label: 'χ²=(12−1)×2.00=22.00', pattern: /χ²=\(12−1\)×2\.00=22\.00/g, tex: String.raw`\chi^2=(12-1)\times 2.00=22.00` },
+    { label: 'VMR=8.4/4.2=2.00', pattern: /VMR=8\.4\/4\.2=2\.00/g, tex: String.raw`\mathrm{VMR}=\frac{8.4}{4.2}=2.00` },
+    { label: 'VMR=s²/x̄', pattern: /VMR=s²\/x̄/g, tex: String.raw`\mathrm{VMR}=\frac{s^2}{\bar{x}}` },
+    { label: 'z=(Rₒ−Rₑ)/SE', pattern: /z=\(Rₒ−Rₑ\)\/SE/g, tex: String.raw`z=\frac{R_o-R_e}{SE}` },
+    { label: 'z=(140−200)/25=−60/25=−2.40', pattern: /z=\(140−200\)\/25=−60\/25=−2\.40/g, tex: String.raw`z=\frac{140-200}{25}=\frac{-60}{25}=-2.40` },
+    { label: 'z=(I−E[I])/√Var[I]', pattern: /z=\(I−E\[I\]\)\/√Var\[I\]/g, tex: String.raw`z=\frac{I-E[I]}{\sqrt{\operatorname{Var}[I]}}` },
+    { label: 'p=(r+1)/(999+1)', pattern: /p=\(r\+1\)\/\(999\+1\)/g, tex: String.raw`p=\frac{r+1}{999+1}` },
+    { label: 'p=(6+1)/(999+1)=7/1000=0.007', pattern: /p=\(6\+1\)\/\(999\+1\)=7\/1000=0\.007/g, tex: String.raw`p=\frac{6+1}{999+1}=\frac{7}{1000}=0.007` },
+    { label: 'F=(R²/k)', pattern: /F=\(R²\/k\)\/\[\(1−R²\)\/\(n−k−1\)\]/g, tex: String.raw`F=\frac{R^2/k}{(1-R^2)/(n-k-1)}` },
+    { label: 't=β/SE', pattern: /t=β\/SE/g, tex: String.raw`t=\frac{\beta}{SE}` },
+    { label: 't=mean/SE', pattern: /t=mean\/SE/g, tex: String.raw`t=\frac{\bar{x}}{SE}` },
+    { label: 'K(d)=πd²', pattern: /K\(d\)=πd²/g, tex: String.raw`K(d)=\pi d^2` },
+    { label: 'K(d)', pattern: /K\(d\)/g, tex: String.raw`K(d)` },
+    { label: 'L(d)', pattern: /L\(d\)/g, tex: String.raw`L(d)` },
+    { label: 'πd²', pattern: /πd²/g, tex: String.raw`\pi d^2` },
+    { label: 'Moran’s I', pattern: /Moran’s I/g, tex: String.raw`\mathrm{Moran's}\ I` },
+    { label: 'Local Moran’s I', pattern: /Local Moran’s I/g, tex: String.raw`\mathrm{Local\ Moran's}\ I` },
+    { label: 'Gi*', pattern: /Gi\*/g, tex: String.raw`G_i^\*` },
+    { label: 'IoU=TP/(TP+FP+FN)', pattern: /IoU=TP\/\(TP\+FP\+FN\)/g, tex: String.raw`\mathrm{IoU}=\frac{TP}{TP+FP+FN}` },
+    { label: 'Precision=TP/(TP+FP)', pattern: /Precision=TP\/\(TP\+FP\)/g, tex: String.raw`\mathrm{Precision}=\frac{TP}{TP+FP}` },
+    { label: 'Recall=TP/(TP+FN)', pattern: /Recall=TP\/\(TP\+FN\)/g, tex: String.raw`\mathrm{Recall}=\frac{TP}{TP+FN}` },
+    { label: 'F1=2PR/(P+R)', pattern: /F1=2PR\/\(P\+R\)/g, tex: String.raw`F_1=\frac{2PR}{P+R}` },
+    { label: 'PSNR=10log10', pattern: /PSNR=10log10\(MSE_baseline\/MSE_new\)/g, tex: String.raw`\Delta\mathrm{PSNR}=10\log_{10}\frac{\mathrm{MSE}_{baseline}}{\mathrm{MSE}_{new}}` },
+    { label: '10log10(100/64)', pattern: /10log10\(100\/64\)/g, tex: String.raw`10\log_{10}\frac{100}{64}` },
+    { label: 's^2/\\bar{x}', pattern: /s\^2\/\\bar\{x\}/g, tex: String.raw`\frac{s^2}{\bar{x}}` },
+    { label: '\\chi^2_{m-1}', pattern: /\\chi\^2_\{m-1\}/g, tex: String.raw`\chi^2_{m-1}` },
+    { label: '\\chi^2', pattern: /\\chi\^2/g, tex: String.raw`\chi^2` },
+    { label: '\\left(1-d_i^2/h^2\\right)^2', pattern: /\\left\(1-d_i\^2\/h\^2\\right\)\^2/g, tex: String.raw`\left(1-\frac{d_i^2}{h^2}\right)^2` },
+    { label: 'd_i^2/h^2', pattern: /d_i\^2\/h\^2/g, tex: String.raw`\frac{d_i^2}{h^2}` },
+    { label: '1/h^2', pattern: /1\/h\^2/g, tex: String.raw`\frac{1}{h^2}` },
+    { label: 'K_CSR(d)', pattern: /K_CSR\(d\)/g, tex: String.raw`K_{\mathrm{CSR}}(d)` },
+    { label: 'X^T X β=X^T y', pattern: /X\^T X β=X\^T y/g, tex: String.raw`X^\mathsf{T}X\boldsymbol{\beta}=X^\mathsf{T}\mathbf{y}` },
+    { label: 'X^T W_i X', pattern: /X\^T W_i X/g, tex: String.raw`X^\mathsf{T}W_iX` },
+    { label: 'X^T X', pattern: /X\^T X/g, tex: String.raw`X^\mathsf{T}X` },
+    { label: 'X^T y', pattern: /X\^T y/g, tex: String.raw`X^\mathsf{T}\mathbf{y}` },
+    { label: 'W_i', pattern: /W_i/g, tex: String.raw`W_i` },
+    { label: 'x_{g,t}', pattern: /x_\{g,t\}/g, tex: String.raw`x_{g,t}` },
+    { label: 'a^{(l-1)}', pattern: /a\^\{\(l-1\)\}/g, tex: String.raw`a^{(l-1)}` },
+    { label: '\\sqrt{\\lambda}', pattern: /\\sqrt\{\\lambda\}/g, tex: String.raw`\sqrt{\lambda}` },
+    { label: '\\lambda', pattern: /\\lambda/g, tex: String.raw`\lambda` },
+    { label: '\\pi', pattern: /\\pi/g, tex: String.raw`\pi` },
+    { label: 's²/x̄', pattern: /s²\/x̄/g, tex: String.raw`\frac{s^2}{\bar{x}}` },
+    { label: 'x̄', pattern: /x̄/g, tex: String.raw`\bar{x}` },
+    { label: 's²', pattern: /s²/g, tex: String.raw`s^2` },
+    { label: 'R²', pattern: /R²/g, tex: String.raw`R^2` },
+    { label: 'Rₒ', pattern: /Rₒ/g, tex: String.raw`R_o` },
+    { label: 'Rₑ', pattern: /Rₑ/g, tex: String.raw`R_e` },
+    { label: 'χ²', pattern: /χ²/g, tex: String.raw`\chi^2` },
+    { label: 'x_i', pattern: /x_i|xᵢ/g, tex: String.raw`x_i` },
+    { label: 'z_i', pattern: /z_i|zᵢ/g, tex: String.raw`z_i` },
+    { label: 'w_ij', pattern: /w_ij|wᵢⱼ/g, tex: String.raw`w_{ij}` },
+    { label: 'SE', pattern: /\bSE\b/g, tex: String.raw`\mathrm{SE}` },
+    { label: 'VMR', pattern: /\bVMR\b/g, tex: String.raw`\mathrm{VMR}` },
+    { label: 'CSR', pattern: /\bCSR\b/g, tex: String.raw`\mathrm{CSR}` },
+    { label: 'MSE', pattern: /\bMSE\b/g, tex: String.raw`\mathrm{MSE}` },
+    { label: 'RMSE', pattern: /\bRMSE\b/g, tex: String.raw`\mathrm{RMSE}` },
+    { label: 'SSIM', pattern: /\bSSIM\b/g, tex: String.raw`\mathrm{SSIM}` },
+    { label: 'PSNR', pattern: /\bPSNR\b/g, tex: String.raw`\mathrm{PSNR}` },
+    { label: 'F1', pattern: /\bF1\b/g, tex: String.raw`F_1` },
+    { label: 'IoU', pattern: /\bIoU\b/g, tex: String.raw`\mathrm{IoU}` },
+    { label: 'z', pattern: /\bz\b/g, tex: String.raw`z` },
+    { label: '−1.96', pattern: /−1\.96/g, tex: String.raw`-1.96` },
   ];
+  const keyPointPattern = /(零假设|备择假设|标准误|显著|拒绝随机分布|拒绝|不能拒绝|聚集|离散|随机|带宽|核函数|蒙特卡洛|p 值|z 检验|t 检验|F 检验|上侧临界值|空间权重|残差|热点|冷点|置换检验)/g;
+
+  function withMathPlaceholders(html, transform) {
+    const placeholders = [];
+    const protect = (tex, label) => {
+      const key = `@@MATH_${placeholders.length}@@`;
+      placeholders.push([key, mathInline(tex, label)]);
+      return key;
+    };
+    let draft = transform(html, protect);
+    placeholders.forEach(([key, value]) => {
+      draft = draft.replaceAll(key, value);
+    });
+    return draft;
+  }
 
   function renderRichText(text) {
-    let html = esc(text || '');
-    inlineMathRules.forEach(([pattern, tex]) => {
-      html = html.replace(pattern, (match) => mathInline(tex, match));
+    return withMathPlaceholders(esc(text || ''), (html, protect) => {
+      formulaTokenRules.forEach((rule) => {
+        html = html.replace(rule.pattern, (match) => protect(typeof rule.tex === 'function' ? rule.tex(match) : rule.tex, match));
+      });
+      return html.replace(keyPointPattern, '<strong class="key-point">$1</strong>');
     });
-    html = html.replace(/(零假设|备择假设|标准误|显著|拒绝随机分布|拒绝 CSR|不能拒绝 CSR|聚集|离散|随机|带宽|核函数|蒙特卡洛|p 值|z 检验|上侧临界值)/g, '<strong class="key-point">$1</strong>');
-    return html;
   }
 
   function splitCalcSteps(calculation) {
@@ -319,14 +380,14 @@
       <div class="lab-explain-grid">
         <section>
           <h4>怎么操作</h4>
-          <ol>${note.steps.map((step) => `<li>${esc(step)}</li>`).join('')}</ol>
+          <ol>${note.steps.map((step) => `<li>${renderRichText(step)}</li>`).join('')}</ol>
         </section>
         <section>
           <h4>观察什么</h4>
-          <ul>${note.observe.map((item) => `<li>${esc(item)}</li>`).join('')}</ul>
+          <ul>${note.observe.map((item) => `<li>${renderRichText(item)}</li>`).join('')}</ul>
         </section>
       </div>
-      <p class="lab-takeaway"><strong>理解重点：</strong>${esc(note.takeaway)}</p>
+      <p class="lab-takeaway"><strong>理解重点：</strong>${renderRichText(note.takeaway)}</p>
     </article>`;
   }
 
@@ -454,9 +515,38 @@
     return '';
   }
 
+  const variableGlossary = [
+    { symbol: 'n', desc: '样本量或空间单元数量', pattern: /(^|[^A-Za-z\\])n([^A-Za-z]|$)/ },
+    { symbol: 'A', desc: '研究区面积', pattern: /(^|[^A-Za-z\\])A([^A-Za-z]|$)/ },
+    { symbol: 'd', desc: '距离或分析尺度', pattern: /(^|[^A-Za-z\\])d([^A-Za-z]|$)/ },
+    { symbol: 'h', desc: '搜索半径或平滑带宽', pattern: /(^|[^A-Za-z\\])h([^A-Za-z]|$)/ },
+    { symbol: '\\lambda', desc: '点密度或事件发生率', pattern: /\\lambda/ },
+    { symbol: 'SE', desc: '标准误，用于把差异标准化为检验统计量', pattern: /(^|[^A-Za-z])SE([^A-Za-z]|$)/ },
+    { symbol: '\\alpha', desc: '显著性水平，例如 0.05', pattern: /\\alpha/ },
+    { symbol: 'p', desc: 'p 值，表示零假设下出现同样或更极端结果的概率', pattern: /(^|[^A-Za-z])p([^A-Za-z]|$)|p_/ },
+    { symbol: 'w_{ij}', desc: '位置 i 与 j 之间的空间权重', pattern: /w_\{?ij\}?|wᵢⱼ/ },
+    { symbol: 'z_i', desc: '第 i 个观测相对均值的标准化偏差', pattern: /z_\{?i\}?|zᵢ/ },
+    { symbol: 'TP', desc: '真正例，真实为目标且被正确识别', pattern: /(^|[^A-Za-z])TP([^A-Za-z]|$)/ },
+    { symbol: 'FP', desc: '假正例，非目标被误判为目标', pattern: /(^|[^A-Za-z])FP([^A-Za-z]|$)/ },
+    { symbol: 'FN', desc: '假负例，目标被漏检', pattern: /(^|[^A-Za-z])FN([^A-Za-z]|$)/ },
+    { symbol: 'MSE', desc: '均方误差，像元误差平方的平均值', pattern: /(^|[^A-Za-z])MSE([^A-Za-z]|$)/ },
+  ];
+
+  function formulaVarItems(f) {
+    const latex = f.latex || f.expression || '';
+    const existing = new Map((f.vars || []).map(([symbol, desc]) => [symbol, desc]));
+    variableGlossary.forEach((item) => {
+      if (!existing.has(item.symbol) && item.pattern.test(latex)) {
+        existing.set(item.symbol, item.desc);
+      }
+    });
+    return [...existing.entries()];
+  }
+
   function renderFormulaCard(f, i) {
     const latex = f.latex || f.expression || '';
     const visual = renderFormulaVisual(f.visual);
+    const varItems = formulaVarItems(f);
     return `<article class="formula-card">
       <div class="formula-card-head">
         <span class="formula-index">公式 ${String(i + 1).padStart(2, '0')}</span>
@@ -466,7 +556,7 @@
       ${f.source ? `<p class="formula-source">${esc(f.source)}</p>` : ''}
       <div class="formula-display math-display" data-tex="${esc(latex)}">${esc(latex)}</div>
       <p class="formula-read text-block"><strong>怎么读：</strong>${renderRichText(f.read || '')}</p>
-      <div class="formula-vars">${(f.vars || []).map(v => `<div><b class="math-inline" data-tex="${esc(v[0])}">${esc(v[0])}</b><span>${renderRichText(v[1])}</span></div>`).join('')}</div>
+      <div class="formula-vars">${varItems.map(v => `<div><b class="math-inline" data-tex="${esc(v[0])}">${esc(v[0])}</b><span>${renderRichText(v[1])}</span></div>`).join('')}</div>
       <div class="formula-deep-grid">
         <section class="formula-derivation">
           <h4>推导过程 ${studyButton(`${f.name || ''}：推导过程`, studyText(f.derivation || []))}</h4>
@@ -1342,9 +1432,10 @@
     $('#studyModalBody').innerHTML = String(body || '')
       .split(/\n{2,}/)
       .filter(Boolean)
-      .map(part => `<p>${esc(part).replace(/\n/g, '<br>')}</p>`)
+      .map(part => `<p>${renderRichText(part).replace(/\n/g, '<br>')}</p>`)
       .join('');
     modal.showModal();
+    renderMathBlocks(modal);
   }
 
   function openVisualModal(type) {

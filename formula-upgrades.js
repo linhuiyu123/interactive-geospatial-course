@@ -256,7 +256,7 @@
         source: 'Lect.6 GWR weighting schemes',
         latex: String.raw`w_{ij}=\frac{1}{d_{ij}^{a}},\qquad w_{ij}=\exp\!\left[-\left(\frac{d_{ij}}{b}\right)^2\right],\qquad w_{ij}=\begin{cases}\left[1-\left(\frac{d_{ij}}{b}\right)^2\right]^2,&d_{ij}<b\\0,&d_{ij}\ge b\end{cases}`,
         read: '距离越远权重越小；Gaussian 平滑衰减，bi-square 在带宽外直接归零。',
-        vars: [['d_{ij}', '位置 i 与样本 j 的距离'], ['a', '反距离幂指数'], ['b', '带宽'], ['w_{ij}', '样本 j 对位置 i 的局部回归权重']],
+        vars: [['d_{ij}', '位置 i 与样本 j 的距离'], ['a', '反距离幂指数'], ['b', '控制权重衰减范围的带宽'], ['w_{ij}', '样本 j 对位置 i 的局部回归权重']],
         derivation: [
           '先计算目标位置到所有样本的距离 d_ij。',
           '选择衰减函数把距离映射为权重 w_ij。',
@@ -555,7 +555,7 @@
         source: 'Lect.11 neural network basics',
         latex: String.raw`\mathbf{a}^{(l)}=\sigma\!\left(W^{(l)}\mathbf{a}^{(l-1)}+\mathbf{b}^{(l)}\right),\qquad \hat{p}_c=\frac{\exp(z_c)}{\sum_{r=1}^{C}\exp(z_r)}`,
         read: '每层先做线性加权，再通过非线性激活函数，最后输出类别概率。',
-        vars: [['W^{(l)}', '第 l 层权重矩阵'], ['b^{(l)}', '偏置'], ['\\sigma', '激活函数'], ['softmax', '把 logits 转成概率']],
+        vars: [['W^{(l)}', '第 l 层权重矩阵'], ['b^{(l)}', '第 l 层偏置项'], ['\\sigma', '激活函数'], ['softmax', '把 logits 转成概率']],
         derivation: [
           '把上一层输出 a^{(l-1)} 与权重矩阵相乘并加偏置。',
           '通过激活函数引入非线性，使网络能表达复杂边界。',

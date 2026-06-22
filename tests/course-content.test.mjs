@@ -115,7 +115,7 @@ assert.ok(appSource.includes("state.tab === 'guide'") && appSource.includes("ren
 const renderSandbox = { window: { __COURSE_TEST_MODE__: true } };
 vm.createContext(renderSandbox);
 vm.runInContext(appSource, renderSandbox, { filename: 'app.js' });
-const { renderRichText } = renderSandbox.window.__COURSE_TEST_HOOKS__;
+const { renderRichText, formulaVarItems } = renderSandbox.window.__COURSE_TEST_HOOKS__;
 const genericLatex = renderRichText(String.raw`再计算邻域加权偏差 \sum_j w_ij z_j。`);
 assert.match(genericLatex, /class="math-inline text-math"/, 'generic LaTeX fragments should become inline math spans');
 assert.match(genericLatex, /data-tex="\\sum_j w_\{ij\} z_j"/, 'generic LaTeX fragments should normalize multi-letter subscripts');
@@ -144,6 +144,12 @@ for (const lectureId of lectureIds) {
     }
   }
 }
+
+const l06VarChecks = enhancements.L06.formulas;
+const olsVars = formulaVarItems(l06VarChecks.find((formula) => formula.tag === 'OLS normal equation')).map(([symbol]) => symbol);
+assert.ok(olsVars.includes('RSS'), 'OLS formula variables should include residual sum of squares');
+const gwrVars = formulaVarItems(l06VarChecks.find((formula) => formula.tag === 'GWR local model')).map(([symbol]) => symbol);
+assert.ok(gwrVars.includes('\\varepsilon_i'), 'GWR formula variables should include the local error term');
 
 assert.ok(appSource.includes('formulaVarItems'), 'formula cards should render merged variable explanations');
 assert.ok(appSource.includes('variableGlossary'), 'formula cards should have fallback explanations for common symbols');

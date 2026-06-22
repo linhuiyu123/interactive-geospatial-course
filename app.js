@@ -580,6 +580,12 @@
     { symbol: 'p', desc: 'p 值，表示零假设下出现同样或更极端结果的概率', pattern: /(^|[^A-Za-z])p([^A-Za-z]|$)|p_/ },
     { symbol: 'w_{ij}', desc: '位置 i 与 j 之间的空间权重', pattern: /w_\{?ij\}?|wᵢⱼ/ },
     { symbol: 'z_i', desc: '第 i 个观测相对均值的标准化偏差', pattern: /z_\{?i\}?|zᵢ/ },
+    { symbol: 'e_i', desc: '第 i 个观测的残差，是真实值与预测值的差', pattern: /e_\{?i\}?|eᵢ/ },
+    { symbol: '\\varepsilon_i', desc: '第 i 个位置的随机误差或模型未解释部分', pattern: /\\varepsilon_\{?i\}?/ },
+    { symbol: 'RSS', desc: '残差平方和，用来衡量模型未解释的误差总量', pattern: /\bRSS\b/ },
+    { symbol: 's_t', desc: '第 t 个时间步的空间位置或状态', pattern: /s_\{?t\}?/ },
+    { symbol: 'C_{in}', desc: '卷积层的输入通道数', pattern: /C_\{?in\}?/ },
+    { symbol: 'C_{out}', desc: '卷积层的输出通道数', pattern: /C_\{?out\}?/ },
     { symbol: 'TP', desc: '真正例，真实为目标且被正确识别', pattern: /(^|[^A-Za-z])TP([^A-Za-z]|$)/ },
     { symbol: 'FP', desc: '假正例，非目标被误判为目标', pattern: /(^|[^A-Za-z])FP([^A-Za-z]|$)/ },
     { symbol: 'FN', desc: '假负例，目标被漏检', pattern: /(^|[^A-Za-z])FN([^A-Za-z]|$)/ },
@@ -1508,6 +1514,7 @@
     window.__COURSE_TEST_HOOKS__ = {
       renderRichText,
       normalizeLatexFragment,
+      formulaVarItems,
     };
     return;
   }

@@ -183,3 +183,69 @@ for (const labName of labNames) {
 assert.ok(appSource.includes('renderLabSupplement'), 'lab page should render a supplemental explanation panel');
 assert.ok(appSource.includes('lab-equation'), 'lab page should include a KaTeX-ready equation area');
 assert.ok(appSource.includes('renderMathBlocks'), 'formula and lab pages should render KaTeX math');
+
+/* ---- course-plus 增强模块：概念配图 + 新增交互演示（行为级回归） ---- */
+const coursePlusSource = readFileSync(new URL('../course-plus.js', import.meta.url), 'utf8');
+const indexHtmlSource = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
+assert.ok(indexHtmlSource.includes('course-plus.js'), 'index.html should load the course-plus add-on script');
+assert.ok(indexHtmlSource.includes('course-plus.css'), 'index.html should load the course-plus styles');
+
+const cpNoop = { style:{setProperty(){}}, querySelector:()=>null, querySelectorAll:()=>[], addEventListener(){}, appendChild(){}, insertBefore(){}, insertAdjacentElement(){}, classList:{contains:()=>false}, getAttribute:()=>'', dataset:{}, setAttribute(){}, get content(){return {firstElementChild:cpNoop};}, set innerHTML(v){}, get firstChild(){return null;} };
+const cpDoc = { readyState:'complete', getElementById:()=>cpNoop, querySelector:()=>null, querySelectorAll:()=>[], addEventListener(){}, createElement:()=>({ set innerHTML(v){}, content:{firstElementChild:cpNoop} }) };
+const cpSandbox = { window:{ LECTURES:[{id:'L05',accent:'#1e6f95'},{id:'L08',accent:'#0c7c84'},{id:'L09',accent:'#7a4f92'},{id:'L13',accent:'#5b87b8'}] }, document:cpDoc, requestAnimationFrame:()=>{}, cancelAnimationFrame:()=>{}, setTimeout:()=>{}, MutationObserver:class{observe(){}}, Math, console };
+cpSandbox.window.document = cpDoc;
+vm.createContext(cpSandbox);
+vm.runInContext(coursePlusSource, cpSandbox, { filename:'course-plus.js' });
+const CPL = cpSandbox.window.CoursePlusLogic;
+const CPF = cpSandbox.window.CoursePlus;
+assert.ok(CPL && CPF, 'course-plus.js should expose interactive logic and figure hooks');
+
+for (const lid of ['L04','L05','L06','L08','L09','L11','L13']) {
+  assert.ok(Array.isArray(CPF.GUIDE_FIGURES[lid]) && CPF.GUIDE_FIGURES[lid].length === 4, `${lid} should provide 4 concept figures between guide text`);
+}
+const figKeys = Object.keys(CPF.FIG);
+for (const [lid, specs] of Object.entries(CPF.GUIDE_FIGURES)) {
+  for (const sp of specs) { if (sp.type === 'svg') assert.ok(figKeys.includes(sp.key), `${lid} references unknown SVG figure ${sp.key}`); assert.ok(sp.cap && sp.cap.length >= 8, `${lid} figure needs a caption`); }
+}
+const A=[],B=[]; for (let i=0;i<8;i++){ A.push([10+Math.random()*3,10+Math.random()*3]); B.push([90+Math.random()*3,90+Math.random()*3]); }
+const db = CPL.dbscan([...A,...B,[50,50]], 8, 4);
+assert.equal(db.clusters, 2, 'DBSCAN should find 2 density clusters');
+assert.equal(db.noise, 1, 'DBSCAN should label the isolated point as noise');
+assert.ok(Math.abs(CPL.entropy(5,5)-1) < 1e-9, 'entropy of a 50/50 node is 1 bit');
+assert.equal(CPL.entropy(4,0), 0, 'entropy of a pure node is 0');
+const items=[]; for (let i=0;i<10;i++){ items.push({x:20+i,cls:0}); items.push({x:60+i,cls:1}); }
+assert.ok(CPL.infoGain(items,50).gain > 0.9, 'a clean split should have high information gain');
+const gridN=6, seg=[], chk=[];
+for (let i=0;i<gridN*gridN;i++){ seg.push((i%gridN)<gridN/2?1:0); chk.push((Math.floor(i/gridN)+(i%gridN))%2); }
+assert.ok(CPL.moranIofGrid(seg,gridN).I > 0.4, 'segregated grid should yield positive Moran I');
+assert.ok(CPL.moranIofGrid(chk,gridN).I < -0.4, 'checkerboard grid should yield negative Moran I');
+
+/* ---- course-plus-stats：检验依据 + 变量定义/性质 + 更多计算题（行为级回归） ---- */
+const statsSource = readFileSync(new URL('../course-plus-stats.js', import.meta.url), 'utf8');
+assert.ok(indexHtmlSource.includes('course-plus-stats.js'), 'index.html should load the stats add-on (course-plus-stats.js)');
+const stSandbox = { window:{}, document:cpDoc, requestAnimationFrame:()=>{}, cancelAnimationFrame:()=>{}, setTimeout:()=>{}, MutationObserver:class{observe(){}}, Math, console };
+stSandbox.window.document = cpDoc;
+vm.createContext(stSandbox);
+vm.runInContext(statsSource, stSandbox, { filename:'course-plus-stats.js' });
+const ST = stSandbox.window.CoursePlusStats;
+assert.ok(ST && ST.RATIONALE && ST.EXTRA_CALC && ST.PRIMER, 'course-plus-stats.js should expose PRIMER, RATIONALE, EXTRA_CALC');
+const realFormulaNames = new Set();
+for (const lid of lectureIds) (enhancements[lid].formulas || []).forEach(f => realFormulaNames.add(f.name));
+for (const key of Object.keys(ST.RATIONALE)) assert.ok(realFormulaNames.has(key), `test-rationale key must match a real formula name: ${key}`);
+assert.ok(Object.keys(ST.RATIONALE).length >= 12, 'should explain test selection for >=12 formulas');
+const bsCmd = /\\[a-zA-Z]+/;
+const stripTexSpans = (h) => String(h).replace(/<span[^>]*data-tex="[^"]*"[^>]*>.*?<\/span>/g,'').replace(/data-tex="[^"]*"/g,'');
+for (const [k,r] of Object.entries(ST.RATIONALE)) {
+  for (const field of ['h0','h1','basis','why','df','decide']) assert.doesNotMatch(stripTexSpans(r[field]), bsCmd, `rationale ${k}.${field} leaks raw LaTeX`);
+  assert.ok(Array.isArray(r.vars) && r.vars.length >= 3, `${k} should define >=3 quantities (definition + property)`);
+  for (const v of r.vars) { assert.equal(v.length, 3, `${k} quantity needs [tex, def, prop]`); assert.doesNotMatch(stripTexSpans(v[1]), bsCmd, `${k} quantity definition leaks LaTeX`); assert.doesNotMatch(stripTexSpans(v[2]), bsCmd, `${k} quantity property leaks LaTeX`); }
+}
+let totalExtraCalc = 0;
+for (const [lid, ps] of Object.entries(ST.EXTRA_CALC)) for (const p of ps) {
+  totalExtraCalc++;
+  assert.ok(Number.isFinite(p.answer), `${lid} extra calc needs a numeric answer`);
+  assert.ok(Array.isArray(p.steps) && p.steps.length >= 2, `${lid} extra calc needs detailed solution steps`);
+  assert.doesNotMatch(stripTexSpans(p.stem), bsCmd, `${lid} extra calc stem leaks raw LaTeX`);
+  for (const s of p.steps) assert.doesNotMatch(stripTexSpans(s.html), bsCmd, `${lid} extra calc step leaks raw LaTeX`);
+}
+assert.ok(totalExtraCalc >= 10, `should add >=10 extra calculation problems with explanations (got ${totalExtraCalc})`);
